@@ -22,6 +22,13 @@ pred isSimpleMajorityWinner[c : Candidate] { //todo: take in a set of simplemajo
     }
 }
 
+// TODO: Replace the original [isSimpleMajorityWinner] eventually
+pred isSimpleMajorityWinnerAbstractVersion[c : Candidate] { //todo: take in a set of simplemajority voters
+    all other_c : Candidate | other_c != c implies {
+        #{sv : SimpleMajorityVoter | sv.firstChoice = c} > #{sv : SimpleMajorityVoter | sv.firstChoice = other_c}
+    }
+}
+
 pred thereIsAWinner {
     some c : Candidate | isSimpleMajorityWinner[c] and Election.winner = c
 }
@@ -34,6 +41,7 @@ fun mostFirstChoiceVotes[e : Election]: one Candidate {
 pred noDictatorsSM { 
     //no Voter | firstChoice changing changes outcome
     //no way for there to be an even number of votes assigned to two candidates, and then 1 more vote cast
+    // isSimpleMajorityWinnerAbstractVersion doesnt change when a single person's first choice changes
 }
 
 
@@ -71,6 +79,18 @@ pred independenceOfIrrelevantAlternativesSM {
     If every voter's preference between X and Y remains unchanged,
     then the group's preference between X and Y will also remain unchanged
     (even if voters' preferences between other pairs like X and Z, Y and Z, or Z and W change).
+    For simple majority, voters only have one preference. So, their preferences never change.
+    */
+
+    /*
+        Important for non-required rankedChoice
+        Voter1:
+        Voter2:
+        Group Preference:
+
+        Voter1:
+        Voter2:
+        Group Preference:
     */
 }
 
