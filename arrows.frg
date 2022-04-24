@@ -1,4 +1,4 @@
-#lang forge "arrow"
+#lang forge
 
 abstract sig Voter {
     firstChoice: one Candidate
@@ -18,13 +18,20 @@ abstract sig Voter {
 
 sig Candidate {}
 
+sig Lambda {}
+
 one sig Election {
-    winner: one Candidate
+    winner: one Candidate,
+    election_voters : set Voter
+}
+
+
+pred abstractDetermineWinner[func_winner : Lambda] {
+    func_winner
 }
 
 pred noDictators { 
-    no Voter | firstChoice changing changes outcome 
-    //no way for there to be an even number of votes assigned to two candidates, and then 1 more vote cast
+    
 }
 
 pred universality { 
