@@ -23,7 +23,7 @@ one sig Election {
 }
 
 pred noDictators { 
-    no Voter | firstChoice changing changes outcome
+    no Voter | firstChoice changing changes outcome 
     //no way for there to be an even number of votes assigned to two candidates, and then 1 more vote cast
 }
 
