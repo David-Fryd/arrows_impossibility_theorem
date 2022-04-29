@@ -4,12 +4,17 @@ open "arrows.frg"
 sig RankedChoiceVoter extends Voter {}
 
 pred wellformed {
+    // TODO: Check that voters don't put the same candidate
+    //       in multiple ranks
     #{Candidate} >= 3
     #{RankedChoiceVoter} > #{Candidate}
     all v: Voter | v in RankedChoiceVoter
     Election.election_voters = Voter
 }
 
+// TODO: Figure out candidate elimination and using second/third prefernce
+//       of voters whose more preferred candidate is eliminated
+//       Maybe keep track of eliminated candidates in Election sig?
 pred isRankedChoiceWinner[c: Candidate] {
     // The candidate either wins via first choice votes
     isFirstChoiceWinner[c] or
@@ -19,8 +24,33 @@ pred isRankedChoiceWinner[c: Candidate] {
     ((not isFirstChoiceWinner[c] and not isSecondChoiceWinner[c]) implies isThirdChoiceWinner[c])
 }
 
-// TODO: Figure out candidate elimination and using second/third prefernce
-//       of voters whose more preferred candidate is eliminated
+// TODO: Clarify majority - Do we want >50% or more than any other candidate?
+//       Simple majority may be ambiguous otherwise
+pred isFirstChoiceWinner[c: Candidate] {
+    // If looking for a plurality
+    // Same process as finding a simple majority winner
+    all other_c: Candidate | c != other_c implies {
+        #{v: Voter | v.firstChoice = c} > #{v: Voter | v.firstChoice = other_c}
+    }
+    // If looking for majority
+    // Candidate should get more than 50% of the first choice votes
+    #{v: Voter | v.firstChoice = c} > divide[#{v: Voter}, 2]
+}
+
+pred isSecondChoiceWinner[c: Candidate] {
+    // For voters who had an eliminated candidate as their first choice,
+    // use their second choice. Otherwise, use first choice
+    #{v : Voter | v.firstChoice = c or (isEliminated[v.firstChoice] and v.secondChoice = c)}
+}
+
+pred isThirdChoiceWinner[c: Candidate] {
+    #{v : Voter | v.firstchoice = c or (isEliminated[v.firstChoice] and isEliminated[v.secondChoice] and v.thirdChoice = c)}
+}
+
+pred isEliminated[c: Candidate] {
+    // Assuming we store eliminated candidates in Election sig
+    c in Election.eliminatedCandidates
+}
 
 pred thereIsAWinner {
     some c: Candidate | isRankedChoiceWinner[c] and Election.winner = c
@@ -28,4 +58,46 @@ pred thereIsAWinner {
 
 fun getRankedChoiceWinner[e: Election]: one Candidate {
     e.winner
+}
+
+// no single voter possesses the power to always determine the group's preference.
+// ref. : https://en.wikipedia.org/wiki/Arrow%27s_impossibility_theorem
+pred noDictatorsRC {
+    // all v : Voter | {
+    //      changeFirstPref[v] does not change winner and
+    //      changeSecondPref[v] does not change winner and
+    //      changeThirdPref[v] does not change winner
+    // }
+}
+
+pred rcHasPrefForA[a: Candidate, b: Candidate, v: Voter] {
+    (v.firstChoice = a and v.secondChoice = b) or 
+    (v.firstChoice = a and v.thirdChoice = b) or
+    (v.secondChoice = a and v.thirdChoice = b)
+}
+
+pred rcAllVotersPreferAtoB[a: Candidate, b: Candidate, voterSet set Voter] {
+    all v: Voter | v in voterSet implies {
+        rcHasPrefForA[a, b, v]
+    }
+}
+
+pred rcGroupPreference[a: Candidate, b: Candidate, voterSet: set Voter] {
+    // Somehow need to add up ranked preferences
+    // # of voters who prefer a to b where a is first and b second and
+    // # of voters who prefer a to b where a is first and b is third and
+    // # of voters who prefer a to b where a is second and b is third
+}
+
+// if every voter prefers alternative X over alternative Y, then the group prefers X over Y
+// ref. : https://en.wikipedia.org/wiki/Arrow%27s_impossibility_theorem
+pred universalityRC {
+    all disj a, b: Candidate | rcAllVotersPreferAtoB[a, b, Voter] implies rcGroupPreference[a, b, Voter]
+}
+
+// if every voter's preference between X and Y remains unchanged, 
+// then the group's preference between X and Y will also remain unchanged
+// ref. : https://en.wikipedia.org/wiki/Arrow%27s_impossibility_theorem
+pred independenceOfIrrelevantAlternativesRC {
+    // TODO: Fill in
 }
