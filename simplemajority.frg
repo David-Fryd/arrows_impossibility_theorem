@@ -1,18 +1,23 @@
 #lang forge
 open "arrows.frg"
 
-sig SimpleMajorityVoter extends Voter {}
+
+//may add hidden preferences to 
+sig SimpleMajorityVoter extends Voter {
+   hiddenSecondChoice: one Candidate,
+   hiddenThirdChoice: one Candidate
+}
 
 
 /*
     Anticipate issues with Election.election_voters/any set of voters/choices of voters changing between calls? 
 */
 pred wellformed {
-    #Candidate >= 3
+    #Candidate = 3
     #SimpleMajorityVoter > #Candidate
     all v : Voter | v in SimpleMajorityVoter
     Election.election_voters = Voter
-
+    all v : Voter | (v.firstChoice != v.hiddenSecondChoice) and (v.firstChoice != v.hiddenThirdChoice) (v.hiddenSecondChoice != v.hiddenThirdChoice)
 }
 
 /* enforces that the winner of the election has the most votes */
@@ -82,15 +87,29 @@ pred independenceOfIrrelevantAlternativesSM {
     For simple majority, voters only have one preference. So, their preferences never change.
     */
 
-    /*
-        Important for non-required rankedChoice
-        Voter1:
-        Voter2:
-        Group Preference:
+    /* Some candidates A B C
+       if A is the winner and B is a loser and C is a loser
+       there should be no way to remove either B or C s.t. A does not win
 
-        Voter1:
-        Voter2:
-        Group Preference:
+       For all candidate pairs (X Y)
+       We want it to be true that no candidate Z could come along s.t. 
+       voter preferences between X and Y remain the same but group 
+       preferences between X and Y change
+       In a simple majority, this looks like the winner changing
+       because that is the only scenario where group preferences are
+       expressed
+    */
+
+    
+
+    /*
+        Idea... model hidden preferences? 
+        For Simple Majority
+        If there exist candidates A and B
+        then there should be no way for a Candidate C to come along s.t. 
+        the voter's preference between A and B remain the same, 
+        but the group's preferences between A and B change
+        Can easily see how this can happen if 
     */
 }
 
