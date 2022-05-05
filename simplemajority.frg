@@ -49,7 +49,7 @@ pred noDictatorsSM {
     //no way for there to be an even number of votes assigned to two candidates, and then 1 more vote cast
     // isSimpleMajorityWinnerAbstractVersion doesnt change when a single person's first choice changes
     not{
-        // c,b not necessarily disjoint
+        // dictators choice 1 and original winner of the election not necessarily disjoint
         some dictator: Voter, dictatorChoice1,originalWinner: Candidate | {
             (dictator.firstChoice = dictatorChoice1) implies isSimpleMajorityWinner[originalWinner]
             (dictator.firstChoice != dictatorChoice1) implies not isSimpleMajorityWinner[originalWinner]
@@ -153,7 +153,8 @@ run {
         #{v: Voter | v.firstChoice = a} = 2
     }
 
-    noDictatorsSM
+    not noDictatorsSM
+    // noDictatorsSM //noDictatorsSM is unsat!
 
 } for exactly 3 Candidate, exactly 7 Voter
 
