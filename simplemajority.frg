@@ -121,16 +121,16 @@ test expect {
 }
 
 run {
-    //wellformed
-    //thereIsAWinner
-    some c : Candidate | {
-        #{v: Voter | v.firstChoice = c} = 3
-    }
+    wellformed
+    thereIsAWinner
+    // some c : Candidate | {
+    //     #{v: Voter | v.firstChoice = c} = 3
+    // }
 
-    some disj a, b: Candidate | {
-        #{v: Voter | v.firstChoice = b} = 2
-        #{v: Voter | v.firstChoice = a} = 2
-    }
+    // some disj a, b: Candidate | {
+    //     #{v: Voter | v.firstChoice = b} = 2
+    //     #{v: Voter | v.firstChoice = a} = 2
+    // }
 } for exactly 3 Candidate
 // run {
 //     wellformed
