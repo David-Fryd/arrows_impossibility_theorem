@@ -4,7 +4,8 @@ open "arrows.frg"
 
 //may add hidden preferences to 
 sig SimpleMajorityVoter extends Voter {
-   hiddenSecondChoice: one Candidate
+    // If you eliminated their first choice, they would vote for this candidate
+   secretPreference: one Candidate
 }
 
 
@@ -16,7 +17,8 @@ pred wellformed {
     #SimpleMajorityVoter > #Candidate
     all v : Voter | v in SimpleMajorityVoter
     Election.election_voters = Voter
-    all v : Voter | (v.firstChoice != v.hiddenSecondChoice)
+    // TODO: Does this have to be true? 
+    all v : Voter | (v.firstChoice != v.secretPreference)
 }
 
 /* enforces that the winner of the election has the most votes */
@@ -46,6 +48,13 @@ pred noDictatorsSM {
     //no Voter | firstChoice changing changes outcome
     //no way for there to be an even number of votes assigned to two candidates, and then 1 more vote cast
     // isSimpleMajorityWinnerAbstractVersion doesnt change when a single person's first choice changes
+    not{
+        // c,b not necessarily disjoint
+        some dictator: Voter, dictatorChoice1,originalWinner: Candidate | {
+            (dictator.firstChoice = dictatorChoice1) implies isSimpleMajorityWinner[originalWinner]
+            (dictator.firstChoice != dictatorChoice1) implies not isSimpleMajorityWinner[originalWinner]
+        }
+    }
 }
 
 
@@ -92,13 +101,11 @@ pred independenceOfIrrelevantAlternativesSM {
 
     not { 
         some disj a, b, c : Candidate | {
-            isSimpleMajorityWinner[a] implies {add[#{v : Voter | (v.firstChoice = c and v.hiddenSecondChoice = b)}, #{v: Voter | v.firstChoice = b}] > #{v: Voter | v.firstChoice = a}}
+            isSimpleMajorityWinner[a] implies 
+            {add[#{v : Voter | (v.firstChoice = c and v.secretPreference = b)}, #{v: Voter | v.firstChoice = b}] > #{v: Voter | v.firstChoice = a}}
         }
     }
     
-
-
-
 }
 
 // run {
@@ -120,18 +127,39 @@ test expect {
     // } for exactly 3 Candidate is sat
 }
 
+// Independence of Irrelevant Alternatives
+// run {
+//     wellformed
+//     thereIsAWinner
+
+//     some disj a, b, winner: Candidate | {
+//         #{v: Voter | v.firstChoice = winner} = 3
+//         #{v: Voter | v.firstChoice = b} = 2
+//         #{v: Voter | v.firstChoice = a} = 2
+//     }
+
+//     not independenceOfIrrelevantAlternativesSM
+
+// } for exactly 3 Candidate, exactly 7 Voter
+
+// No Dictators
 run {
     wellformed
     thereIsAWinner
-    // some c : Candidate | {
-    //     #{v: Voter | v.firstChoice = c} = 3
-    // }
 
-    // some disj a, b: Candidate | {
-    //     #{v: Voter | v.firstChoice = b} = 2
-    //     #{v: Voter | v.firstChoice = a} = 2
-    // }
-} for exactly 3 Candidate
+    some disj a, b, winner: Candidate | {
+        #{v: Voter | v.firstChoice = winner} = 3
+        #{v: Voter | v.firstChoice = b} = 2
+        #{v: Voter | v.firstChoice = a} = 2
+    }
+
+    noDictatorsSM
+
+} for exactly 3 Candidate, exactly 7 Voter
+
+
+
+
 // run {
 //     wellformed
 //     thereIsAWinner
