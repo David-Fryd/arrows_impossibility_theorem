@@ -4,8 +4,7 @@ open "arrows.frg"
 
 //may add hidden preferences to 
 sig SimpleMajorityVoter extends Voter {
-   hiddenSecondChoice: one Candidate,
-   hiddenThirdChoice: one Candidate
+   hiddenSecondChoice: one Candidate
 }
 
 
@@ -17,7 +16,7 @@ pred wellformed {
     #SimpleMajorityVoter > #Candidate
     all v : Voter | v in SimpleMajorityVoter
     Election.election_voters = Voter
-    all v : Voter | (v.firstChoice != v.hiddenSecondChoice) and (v.firstChoice != v.hiddenThirdChoice) (v.hiddenSecondChoice != v.hiddenThirdChoice)
+    all v : Voter | (v.firstChoice != v.hiddenSecondChoice)
 }
 
 /* enforces that the winner of the election has the most votes */
@@ -81,28 +80,6 @@ pred universalitySM {
 
 pred independenceOfIrrelevantAlternativesSM {
     /*
-    If every voter's preference between X and Y remains unchanged,
-    then the group's preference between X and Y will also remain unchanged
-    (even if voters' preferences between other pairs like X and Z, Y and Z, or Z and W change).
-    For simple majority, voters only have one preference. So, their preferences never change.
-    */
-
-    /* Some candidates A B C
-       if A is the winner and B is a loser and C is a loser
-       there should be no way to remove either B or C s.t. A does not win
-
-       For all candidate pairs (X Y)
-       We want it to be true that no candidate Z could come along s.t. 
-       voter preferences between X and Y remain the same but group 
-       preferences between X and Y change
-       In a simple majority, this looks like the winner changing
-       because that is the only scenario where group preferences are
-       expressed
-    */
-
-    
-
-    /*
         Idea... model hidden preferences? 
         For Simple Majority
         If there exist candidates A and B
@@ -111,6 +88,17 @@ pred independenceOfIrrelevantAlternativesSM {
         but the group's preferences between A and B change
         Can easily see how this can happen if 
     */
+    //if we remove candidate C, does B now win over A? 
+
+    not { 
+        some disj a, b, c : Candidate | {
+            isSimpleMajorityWinner[a] implies {add[#{v : Voter | (v.firstChoice = c and v.hiddenSecondChoice = b)}, #{v: Voter | v.firstChoice = b}] > #{v: Voter | v.firstChoice = a}}
+        }
+    }
+    
+
+
+
 }
 
 // run {
@@ -121,14 +109,36 @@ pred independenceOfIrrelevantAlternativesSM {
 
 
 test expect {
-    universality_holds_sm: {
-        {wellformed and thereIsAWinner} implies universalitySM
-    } for exactly 3 Candidate is theorem
+    // universality_holds_sm: {
+    //     {wellformed and thereIsAWinner} implies universalitySM
+    // } for exactly 3 Candidate is theorem
+
+    // independence_of_irrelevant_alternatives_sm: {
+    //     wellformed
+    //     thereIsAWinner
+    //     not independenceOfIrrelevantAlternativesSM
+    // } for exactly 3 Candidate is sat
 }
 
+run {
+    //wellformed
+    //thereIsAWinner
+    some c : Candidate | {
+        #{v: Voter | v.firstChoice = c} = 3
+    }
+
+    some disj a, b: Candidate | {
+        #{v: Voter | v.firstChoice = b} = 2
+        #{v: Voter | v.firstChoice = a} = 2
+    }
+} for exactly 3 Candidate
 // run {
-//     wellformed 
-//     some c : Candidate | isSimpleMajorityWinner[c] and Election.winner = c 
-// }
+//     wellformed
+//     thereIsAWinner
+//     all c : Candidate | {
+//         some v : Voter | v.firstChoice = c
+//     }
+//     not independenceOfIrrelevantAlternativesSM
+// } for exactly 3 Candidate, exactly 7 Voter
 
 
