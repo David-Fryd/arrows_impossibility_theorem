@@ -4,12 +4,15 @@ open "arrows.frg"
 sig RankedChoiceVoter extends Voter {}
 
 pred wellformed {
-    // TODO: Check that voters don't put the same candidate
-    //       in multiple ranks
-    #{Candidate} >= 3
-    #{RankedChoiceVoter} > #{Candidate}
+    #Candidate >= 3
+    #RankedChoiceVoter > #Candidate
     all v: Voter | v in RankedChoiceVoter
     Election.election_voters = Voter
+    all v: Voter | {
+        not v.firstChoice = v.secondChoice
+        not v.firstChoice = v.thirdChoice
+        not v.secondChoice = v.thirdChoice
+    }
 }
 
 // TODO: Figure out candidate elimination and using second/third preference
