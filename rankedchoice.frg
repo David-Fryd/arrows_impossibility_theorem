@@ -12,7 +12,7 @@ pred wellformed {
     Election.election_voters = Voter
 }
 
-// TODO: Figure out candidate elimination and using second/third prefernce
+// TODO: Figure out candidate elimination and using second/third preference
 //       of voters whose more preferred candidate is eliminated
 //       Maybe keep track of eliminated candidates in Election sig?
 pred isRankedChoiceWinner[c: Candidate] {
@@ -24,27 +24,19 @@ pred isRankedChoiceWinner[c: Candidate] {
     ((not isFirstChoiceWinner[c] and not isSecondChoiceWinner[c]) implies isThirdChoiceWinner[c])
 }
 
-// TODO: Clarify majority - Do we want >50% or more than any other candidate?
-//       Simple majority may be ambiguous otherwise
 pred isFirstChoiceWinner[c: Candidate] {
-    // If looking for a plurality
-    // Same process as finding a simple majority winner
-    all other_c: Candidate | c != other_c implies {
-        #{v: Voter | v.firstChoice = c} > #{v: Voter | v.firstChoice = other_c}
-    }
-    // If looking for majority
-    // Candidate should get more than 50% of the first choice votes
+    // Candidate should get more than 50% of the votes
     #{v: Voter | v.firstChoice = c} > divide[#{v: Voter}, 2]
 }
 
 pred isSecondChoiceWinner[c: Candidate] {
     // For voters who had an eliminated candidate as their first choice,
     // use their second choice. Otherwise, use first choice
-    #{v : Voter | v.firstChoice = c or (isEliminated[v.firstChoice] and v.secondChoice = c)}
+    #{v : Voter | v.firstChoice = c or (isEliminated[v.firstChoice] and v.secondChoice = c)} > divide[#{v: Voter}, 2]
 }
 
 pred isThirdChoiceWinner[c: Candidate] {
-    #{v : Voter | v.firstchoice = c or (isEliminated[v.firstChoice] and isEliminated[v.secondChoice] and v.thirdChoice = c)}
+    #{v : Voter | v.firstchoice = c or (isEliminated[v.firstChoice] and isEliminated[v.secondChoice] and v.thirdChoice = c)} > divide[#{v: Voter}, 2]
 }
 
 pred isEliminated[c: Candidate] {
