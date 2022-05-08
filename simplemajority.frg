@@ -18,7 +18,7 @@ pred wellformed {
     all v : Voter | v in SimpleMajorityVoter
     Election.election_voters = Voter
     // TODO: Does this have to be true? 
-    all v : Voter | (v.firstChoice != v.secretPreference)
+    // all v : Voter | (v.firstChoice != v.secretPreference)
 }
 
 /* enforces that the winner of the election has the most votes */
@@ -27,6 +27,14 @@ pred isSimpleMajorityWinner[c : Candidate] { //todo: take in a set of simplemajo
         #{sv : SimpleMajorityVoter | sv.firstChoice = c} > #{sv : SimpleMajorityVoter | sv.firstChoice = other_c}
     }
 }
+
+/* enforces that the winner of the election has the most votes using people's secret preferences */
+pred isSimpleMajorityWinnerSecretPref[c : Candidate] { //todo: take in a set of simplemajority voters
+    all other_c : Candidate | other_c != c implies {
+        #{sv : SimpleMajorityVoter | sv.secretPreference = c} > #{sv : SimpleMajorityVoter | sv.secretPreference = other_c}
+    }
+}
+
 
 // TODO: Replace the original [isSimpleMajorityWinner] eventually
 pred isSimpleMajorityWinnerAbstractVersion[c : Candidate] { //todo: take in a set of simplemajority voters
@@ -44,17 +52,50 @@ fun mostFirstChoiceVotes[e : Election]: one Candidate {
     e.winner
 }
 
+// We simulate 2 parallel elections where other voters choices in both elections (firstChoice & secretPref represent)
 pred noDictatorsSM { 
     //no Voter | firstChoice changing changes outcome
     //no way for there to be an even number of votes assigned to two candidates, and then 1 more vote cast
     // isSimpleMajorityWinnerAbstractVersion doesnt change when a single person's first choice changes
-    not{
-        // dictators choice 1 and original winner of the election not necessarily disjoint
-        some dictator: Voter, dictatorChoice1,originalWinner: Candidate | {
-            (dictator.firstChoice = dictatorChoice1) implies isSimpleMajorityWinner[originalWinner]
-            (dictator.firstChoice != dictatorChoice1) implies not isSimpleMajorityWinner[originalWinner]
+    
+    no potentialDictator: Voter | {
+
+        all other_voter: Voter | other_voter!=potentialDictator implies {
+                other_voter.firstChoice = other_voter.secretPreference
+        }
+        potentialDictator.firstChoice != potentialDictator.secretPreference
+
+        // NOTE: We just care if the election result *CHANGES*, not necessarily that the dictator gets their preferred candidate either way
+        some winner: Candidate | {
+            isSimpleMajorityWinner[winner]
+            not isSimpleMajorityWinnerSecretPref[winner]
         }
     }
+
+         
+    
+    // not{
+    //     // NOTE: We just care if the election result *CHANGES*, not necessarily that the dictator gets their preferred candidate either way
+    //     some dictator: Voter, winner: Candidate | {
+    //         isSimpleMajorityWinner[winner]
+    //         not isSimpleMajorityWinnerSecretPref[winner]
+    //     }
+
+    //     // isSimpleMajorityWinnerSecretPref[]
+       
+    //     // // dictators choice 1 and original winner of the election not necessarily disjoint
+    //     // some dictator: Voter, disj winner1,winner2: Candidate | {
+
+    //     //     all other_voter: Voter | other_voter!=dictator implies {
+    //     //         other_voter.firstChoice = other_voter.secretPreference
+    //     //     } 
+    //     //     dictator.firstChoice != dictator.secretPreference
+
+
+    //     //     (dictator.firstChoice = winner1) implies isSimpleMajorityWinner[originalWinner]
+    //     //     (dictator.firstChoice = winner2) implies not isSimpleMajorityWinner[originalWinner]
+    //     // }
+    // }
 }
 
 
@@ -99,6 +140,9 @@ pred independenceOfIrrelevantAlternativesSM {
     */
     //if we remove candidate C, does B now win over A? 
 
+    // Guard condition
+    all v : Voter | (v.firstChoice != v.secretPreference)
+
     not { 
         some disj a, b, c : Candidate | {
             isSimpleMajorityWinner[a] implies 
@@ -116,15 +160,21 @@ pred independenceOfIrrelevantAlternativesSM {
 
 
 test expect {
-    // universality_holds_sm: {
-    //     {wellformed and thereIsAWinner} implies universalitySM
-    // } for exactly 3 Candidate is theorem
+    universality_holds_sm: {
+        {wellformed and thereIsAWinner} implies universalitySM
+    } for exactly 3 Candidate, exactly 7 Voter is theorem
 
-    // independence_of_irrelevant_alternatives_sm: {
-    //     wellformed
-    //     thereIsAWinner
-    //     not independenceOfIrrelevantAlternativesSM
-    // } for exactly 3 Candidate is sat
+    independence_of_irrelevant_alternatives_sm: {
+        wellformed
+        thereIsAWinner
+        not independenceOfIrrelevantAlternativesSM
+    } for exactly 3 Candidate, exactly 7 Voter is sat
+
+    no_dictators_sm: {
+        wellformed
+        thereIsAWinner
+        not noDictatorsSM
+    } for exactly 3 Candidate, exactly 7 Voter is sat
 }
 
 // Independence of Irrelevant Alternatives
@@ -139,24 +189,20 @@ test expect {
 //     }
 
 //     not independenceOfIrrelevantAlternativesSM
-
 // } for exactly 3 Candidate, exactly 7 Voter
 
-// No Dictators
-run {
-    wellformed
-    thereIsAWinner
 
-    some disj a, b, winner: Candidate | {
-        #{v: Voter | v.firstChoice = winner} = 3
-        #{v: Voter | v.firstChoice = b} = 2
-        #{v: Voter | v.firstChoice = a} = 2
-    }
 
-    not noDictatorsSM
-    // noDictatorsSM //noDictatorsSM is unsat!
 
-} for exactly 3 Candidate, exactly 7 Voter
+
+// // No Dictators
+// run {
+//     wellformed
+//     thereIsAWinner
+
+//     not noDictatorsSM
+//     // noDictatorsSM //noDictatorsSM is unsat!
+// } for exactly 3 Candidate, exactly 7 Voter
 
 
 

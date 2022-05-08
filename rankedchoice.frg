@@ -96,3 +96,13 @@ pred universalityRC {
 pred independenceOfIrrelevantAlternativesRC {
     // TODO: Fill in
 }
+
+
+
+/*
+
+Is winner first choice, just looks at firstChoice
+
+iswinnerSecondChoice[c], looks at BOTH firstChoice and secondChoice and combines the two (and nO ONE was winnerFirstChoice)
+
+*/
