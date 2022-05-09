@@ -1,7 +1,10 @@
 #lang forge
 open "arrows.frg"
 
-sig RankedChoiceVoter extends Voter {}
+sig RankedChoiceVoter extends Voter {
+    secondChoice: one Candidate,
+    thirdChoice: one Candidate
+}
 
 pred wellformed {
     #Candidate >= 3
@@ -20,35 +23,74 @@ pred wellformed {
 //       Maybe keep track of eliminated candidates in Election sig?
 pred isRankedChoiceWinner[c: Candidate] {
     // The candidate either wins via first choice votes
-    isFirstChoiceWinner[c] or
+    isFirstChoiceWinner[c] //or
     // Or the candidate wins via second choice votes
-    (not isFirstChoiceWinner[c] implies isSecondChoiceWinner[c]) or
-    // Or the candidate wins via third choice votes
-    ((not isFirstChoiceWinner[c] and not isSecondChoiceWinner[c]) implies isThirdChoiceWinner[c])
+    // (not isFirstChoiceWinner[c] and isSecondChoiceWinner[c]) or
+    // // Or the candidate wins via third choice votes
+    // ((not isFirstChoiceWinner[c] and not isSecondChoiceWinner[c]) and isThirdChoiceWinner[c])
 }
 
+
+fun NUM_VOTES_TO_BEAT: one Int {
+    divide[#{v: Voter|v in Voter}, 2]
+}
+
+fun numFirstRoundVotes[c: Candidate]: one Int {
+    #{v: Voter | v.firstChoice = c}
+}
+
+// Has a given candidate won during first Round
 pred isFirstChoiceWinner[c: Candidate] {
     // Candidate should get more than 50% of the votes
-    #{v: Voter | v.firstChoice = c} > divide[#{v: Voter}, 2]
+    numFirstRoundVotes[c] > NUM_VOTES_TO_BEAT
 }
 
+// There are no candidates that have won the first runoff
+pred noFirstChoiceWinner{ // (For 7 candidates, no one got >=4 firstChoice votes)
+    no c: Candidate | {
+        isFirstChoiceWinner[c]
+    }
+}
+
+// Returns true if this is the candidate that receieved the least amount of votes during firstChoice round
+pred eliminatedInFirstRound[c: Candidate] {
+    // All other candidates have more votes than this candidate (if equal to this, that candidate is ALSO eliminated)
+    all other_c: Candidate | other_c != c implies {
+        numFirstRoundVotes[c] <= numFirstRoundVotes[other_c]
+    }
+}
+
+pred eliminatedSecondChoice[c: Candidate] {
+    // For all candidates that weren't elimnated n first round
+    
+}
+
+// leastAmountOfVotesAsFirstChoice replaces isEliminated TODO: David tn
 pred isSecondChoiceWinner[c: Candidate] {
+    // Candidate can only win as a secondChoiceWinner if there were no first choice winners
+    noFirstChoiceWinner
+    
     // For voters who had an eliminated candidate as their first choice,
     // use their second choice. Otherwise, use first choice
-    #{v : Voter | v.firstChoice = c or (isEliminated[v.firstChoice] and v.secondChoice = c)} > divide[#{v: Voter}, 2]
+    #{v : Voter | v.firstChoice = c or (eliminatedInFirstRound[v.firstChoice] and v.secondChoice = c)} > divide[#{v: Voter|v in Voter}, 2]
 }
 
-pred isThirdChoiceWinner[c: Candidate] {
-    #{v : Voter | v.firstchoice = c or (isEliminated[v.firstChoice] and isEliminated[v.secondChoice] and v.thirdChoice = c)} > divide[#{v: Voter}, 2]
-}
 
-pred isEliminated[c: Candidate] {
-    // Assuming we store eliminated candidates in Election sig
-    c in Election.eliminatedCandidates
-}
+// pred isThirdChoiceWinner[c: Candidate] {
+//     #{v : Voter | v.firstChoice = c or (isEliminated[v.firstChoice] and isEliminated[v.secondChoice] and v.thirdChoice = c)} > divide[#{v: Voter|v in Voter}, 2]
+// }
+
+// pred isEliminated[c: Candidate] {
+//     // Assuming we store eliminated candidates in Election sig
+//     // c in Election.eliminatedCandidates
+//     1>0
+// }
 
 pred thereIsAWinner {
-    some c: Candidate | isRankedChoiceWinner[c] and Election.winner = c
+    some c: Candidate | {
+        // isRankedChoiceWinner[c]
+        Election.winner = c
+    }
 }
 
 fun getRankedChoiceWinner[e: Election]: one Candidate {
@@ -71,7 +113,7 @@ pred rcHasPrefForA[a: Candidate, b: Candidate, v: Voter] {
     (v.secondChoice = a and v.thirdChoice = b)
 }
 
-pred rcAllVotersPreferAtoB[a: Candidate, b: Candidate, voterSet set Voter] {
+pred rcAllVotersPreferAtoB[a: Candidate, b: Candidate, voterSet: set Voter] {
     all v: Voter | v in voterSet implies {
         rcHasPrefForA[a, b, v]
     }
@@ -97,6 +139,14 @@ pred independenceOfIrrelevantAlternativesRC {
     // TODO: Fill in
 }
 
+
+run {
+    wellformed
+    thereIsAWinner
+
+    noFirstChoiceWinner
+
+} for exactly 3 Candidate, exactly 7 Voter
 
 
 /*
