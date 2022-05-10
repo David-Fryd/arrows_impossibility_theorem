@@ -30,13 +30,15 @@ function make_candy(url, my_candidate) {
   cand_plat.style.width = '100%'
   cand_plat.style.height = '100%'
   cand_plat.style.display = 'inline'
-  cand_plat.style.border = '1px solid black'
   const img = document.createElement('img')
   img.src = url
   img.style.width = '20%'
   img.style.height = '20%'
   img.style['margin-top'] = '5%'
   img.style['margin-bottom'] = '5%'
+  const cand_label = document.createElement("p")
+  cand_label.innerText = my_candidate.toString()
+  cand_plat.appendChild(cand_label)
 
 //   const test_thing = document.createElement('img')
 //   const test_icon = voter_url_arr[1]
@@ -58,6 +60,9 @@ function make_candy(url, my_candidate) {
         voter_img.style.width = '10%'
         voter_img.style.height = '10%'
         voter_img.style.display = 'inline'
+        if(voter_FC != votie.join(secretPreference).toString()) {
+            voter_img.style["background-color"] = 'yellow'    
+        }
         cand_plat.appendChild(voter_img)
     }  
   }
@@ -69,7 +74,7 @@ function make_candy(url, my_candidate) {
 function make_election() {
     const div = document.createElement('div')
     div.style.width = '100%'
-    div.style.height = '80%'
+    div.style.height = '70%'
     
     for (const ind in candies.tuples()) {
       const candie = candies.tuples()[ind]
