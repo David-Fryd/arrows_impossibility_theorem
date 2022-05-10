@@ -195,14 +195,14 @@ test expect {
 
 
 
-// // No Dictators
-// run {
-//     wellformed
-//     thereIsAWinner
+// No Dictators
+run {
+    wellformed
+    thereIsAWinner
 
-//     not noDictatorsSM
-//     // noDictatorsSM //noDictatorsSM is unsat!
-// } for exactly 3 Candidate, exactly 7 Voter
+    not noDictatorsSM
+    // noDictatorsSM //noDictatorsSM is unsat!
+} for exactly 3 Candidate, exactly 7 Voter
 
 
 
