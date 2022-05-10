@@ -6,6 +6,11 @@ sig RankedChoiceVoter extends Voter {
     thirdChoice: one Candidate
 }
 
+one sig EliminatedCandidates {
+    firstRound: one Candidate,
+    secondRound: one Candidate
+}
+
 pred wellformed {
     #Candidate >= 3
     #RankedChoiceVoter > #Candidate
@@ -16,6 +21,7 @@ pred wellformed {
         not v.firstChoice = v.thirdChoice
         not v.secondChoice = v.thirdChoice
     }
+    
 }
 
 // TODO: Figure out candidate elimination and using second/third preference
@@ -23,7 +29,12 @@ pred wellformed {
 //       Maybe keep track of eliminated candidates in Election sig?
 pred isRankedChoiceWinner[c: Candidate] {
     // The candidate either wins via first choice votes
-    isFirstChoiceWinner[c] //or
+    isFirstChoiceWinner[c] or
+    isSecondChoiceWinner[c] or
+    isThirdChoiceWinner[c]
+    
+    
+     //or
     // Or the candidate wins via second choice votes
     // (not isFirstChoiceWinner[c] and isSecondChoiceWinner[c]) or
     // // Or the candidate wins via third choice votes
@@ -35,9 +46,78 @@ fun NUM_VOTES_TO_BEAT: one Int {
     divide[#{v: Voter|v in Voter}, 2]
 }
 
+// Has a candidate been eliminated in the first round
+pred isEliminatedFirstRound[c: Candidate] {
+    EliminatedCandidates.firstRound = c
+}
+
+// Has a candidate been eliminated in either the first or second round
+pred isEliminatedFirstOrSecondRound[c: Candidate] {
+    (EliminatedCandidates.firstRound = c) or 
+    (EliminatedCandidates.secondRound = c)
+}
+
+// When calculating number of votes for a candidate, we assume that the candidate passed in has NOT been elimnated
 fun numFirstRoundVotes[c: Candidate]: one Int {
     #{v: Voter | v.firstChoice = c}
 }
+
+// When calculating number of votes for a candidate, we assume that the candidate passed in has NOT been elimnated
+fun numSecondRoundVotes[c: Candidate]: one Int {
+    // For voters who had an eliminated candidate as their first choice,
+    // use their second choice. Otherwise, use first choice
+    #{v : Voter | v.firstChoice = c or (isEliminatedFirstRound[v.firstChoice] and v.secondChoice = c)}
+}
+
+// When calculating number of votes for a candidate, we assume that the candidate passed in has NOT been elimnated
+fun numThirdRoundVotes[c: Candidate]: one Int {
+    //TODO: Need to add in one more that counts them as secondChoice as well
+    #{v : Voter | 
+        (v.firstChoice = c or 
+        (isEliminatedFirstOrSecondRound[v.firstChoice] and v.secondChoice = c) or
+        (isEliminatedFirstOrSecondRound[v.firstChoice] and isEliminatedFirstOrSecondRound[v.secondChoice] and v.thirdChoice = c)
+        )}
+}
+
+// // Returns true if this is the candidate that receieved the least amount of votes during firstChoice round
+// pred eliminatedInFirstRound[c: Candidate] {
+//     // All other candidates have more votes than this candidate (if equal, other candidate could also be eliminated)
+//     all other_c: Candidate | other_c != c implies {
+//         numFirstRoundVotes[c] <= numFirstRoundVotes[other_c]
+//     }
+// }
+
+// Determines the candidate that would be eliminated in the first round (not necessarily used, but sets it anyway)
+pred candidateEliminatedFirstRound {
+    // If there is a tie, a random candidate (model abstraction) of the worst performing candidates is considered eliminated
+    some c: Candidate | {
+        all other_c: Candidate | other_c != c implies {
+            numFirstRoundVotes[c] <= numFirstRoundVotes[other_c]
+        }
+        EliminatedCandidates.firstRound = c
+    }
+}
+
+// Determines the candidate that would be eliminated in the second round (not necessarily used, but sets it anyway)
+pred candidateEliminatedSecondRound {
+    // If there is a tie, a random candidate (model abstraction) of the worst performing candidates is considered eliminated
+    some c: Candidate | {
+        // If candidate was already eliminated in the first round we can't eliminate them again
+        (not isEliminatedFirstRound[c])
+
+        all other_c: Candidate | ((not isEliminatedFirstRound[other_c]) and other_c != c) implies {
+            numSecondRoundVotes[c] <= numSecondRoundVotes[other_c]
+        }
+        EliminatedCandidates.secondRound = c
+    }
+}
+
+// Ensures that elimination occurs properly at each step
+pred eliminationProcedure {
+    candidateEliminatedFirstRound
+    candidateEliminatedSecondRound
+}
+
 
 // Has a given candidate won during first Round
 pred isFirstChoiceWinner[c: Candidate] {
@@ -52,27 +132,34 @@ pred noFirstChoiceWinner{ // (For 7 candidates, no one got >=4 firstChoice votes
     }
 }
 
-// Returns true if this is the candidate that receieved the least amount of votes during firstChoice round
-pred eliminatedInFirstRound[c: Candidate] {
-    // All other candidates have more votes than this candidate (if equal to this, that candidate is ALSO eliminated)
-    all other_c: Candidate | other_c != c implies {
-        numFirstRoundVotes[c] <= numFirstRoundVotes[other_c]
-    }
-}
-
-pred eliminatedSecondChoice[c: Candidate] {
-    // For all candidates that weren't elimnated n first round
-    
-}
-
-// leastAmountOfVotesAsFirstChoice replaces isEliminated TODO: David tn
 pred isSecondChoiceWinner[c: Candidate] {
     // Candidate can only win as a secondChoiceWinner if there were no first choice winners
     noFirstChoiceWinner
+    // Can't have been eliminated (otherwise can't win)
+    not isEliminatedFirstRound[c]
     
     // For voters who had an eliminated candidate as their first choice,
     // use their second choice. Otherwise, use first choice
-    #{v : Voter | v.firstChoice = c or (eliminatedInFirstRound[v.firstChoice] and v.secondChoice = c)} > divide[#{v: Voter|v in Voter}, 2]
+    numSecondRoundVotes[c] > NUM_VOTES_TO_BEAT
+}
+
+// There are no candidates that have won the first runoff
+pred noSecondChoiceWinner{ // (For 7 candidates, no one got >=4 firstChoice votes)
+    no c: Candidate | {
+        isSecondChoiceWinner[c]
+    }
+}
+
+pred isThirdChoiceWinner[c: Candidate] {
+    // Candidate can only win as a thirdChoiceWinner if there were no second choice winners
+    noSecondChoiceWinner
+
+    // Can't have been eliminated (otherwise can't win)
+    not isEliminatedFirstOrSecondRound[c]
+
+    // For voters who had an eliminated candidate as their first choice,
+    // use their second choice. Otherwise, use first choice
+    numThirdRoundVotes[c] > NUM_VOTES_TO_BEAT
 }
 
 
@@ -88,7 +175,7 @@ pred isSecondChoiceWinner[c: Candidate] {
 
 pred thereIsAWinner {
     some c: Candidate | {
-        // isRankedChoiceWinner[c]
+        isRankedChoiceWinner[c]
         Election.winner = c
     }
 }
@@ -142,17 +229,12 @@ pred independenceOfIrrelevantAlternativesRC {
 
 run {
     wellformed
+    eliminationProcedure
     thereIsAWinner
+    
 
+    // Below 2 lines force interesting examples of RCV
     noFirstChoiceWinner
+    noSecondChoiceWinner // YIELDS Unsat with 3 candidate (presumably impossible to not have a winner after second round w/ 3 candidates and 7 voters)
 
-} for exactly 3 Candidate, exactly 7 Voter
-
-
-/*
-
-Is winner first choice, just looks at firstChoice
-
-iswinnerSecondChoice[c], looks at BOTH firstChoice and secondChoice and combines the two (and nO ONE was winnerFirstChoice)
-
-*/
+} for exactly 4 Candidate, exactly 7 Voter
