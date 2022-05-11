@@ -74,17 +74,17 @@ pred noDictatorsSP {
 }
 
 
-pred smHasPrefForA[a : Candidate, b : Candidate, v : Voter] {
+pred spHasPrefForA[a : Candidate, b : Candidate, v : Voter] {
     v.firstChoice = a
 }
 
-pred smAllVotersPreferAtoB[a : Candidate, b : Candidate, voterSet: set Voter] {
+pred spAllVotersPreferAtoB[a : Candidate, b : Candidate, voterSet: set Voter] {
     all v: Voter | v in voterSet implies {
-        smHasPrefForA[a,b,v]
+        spHasPrefForA[a,b,v]
     }
 }
 
-pred smGroupPreference[a : Candidate, b : Candidate, voterSet: set Voter] {
+pred spGroupPreference[a : Candidate, b : Candidate, voterSet: set Voter] {
     #{vot : Voter | vot in voterSet and vot.firstChoice = a} > #{vot : Voter | vot in voterSet and vot.firstChoice = b}
 }
 
@@ -92,7 +92,7 @@ pred smGroupPreference[a : Candidate, b : Candidate, voterSet: set Voter] {
 pred universalitySP { 
     // For simple plurality, its a bit tautologic, but thats what impossibility translates to here
     //if everyone prefers A to B, then the group prefers A to B
-    all disj a,b : Candidate | smAllVotersPreferAtoB[a, b, Voter] implies smGroupPreference[a, b, Voter]
+    all disj a,b : Candidate | spAllVotersPreferAtoB[a, b, Voter] implies spGroupPreference[a, b, Voter]
         //#{v : Voter | v.firstChoice = a} > #{v : Voter | v.firstChoice = b}
         /**
         groupPreference[a,b,V] implies allVoterspreferAtoB[a,b,V] ?
@@ -186,7 +186,7 @@ test expect {
 //         #{v: Voter | v.firstChoice = a} = 2
 //     }
 
-//     not independenceOfIrrelevantAlternativesSM
+//     not independenceOfIrrelevantAlternativesSP
 // } for exactly 3 Candidate, exactly 7 Voter
 
 
