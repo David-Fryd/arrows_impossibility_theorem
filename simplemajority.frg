@@ -167,7 +167,7 @@ test expect {
     canGetWinner: {
         wellformed
         thereIsAWinner
-    } for exactyl 3 Candidate, exactly 7 Voter is sat
+    } for exactly 3 Candidate, exactly 7 Voter is sat
 
     universality_holds_sm: {
         {wellformed and thereIsAWinner} implies universalitySM

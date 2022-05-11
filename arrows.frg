@@ -37,8 +37,9 @@ pred noDictators {
     
 }
 
-pred universality { 
+pred universality[allVotersPreferAtoB : Lambda, groupPreference : Lambda] { 
     //if everyone prefers A to B, then the group prefers A to B
+    all disj a,b : Candidate | allVotersPreferAtoB[a, b, Voter] implies groupPreference[a, b, Voter]
 }
 
 pred independenceOfIrrelevantAlternatives {
