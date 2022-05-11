@@ -226,40 +226,59 @@ pred independenceOfIrrelevantAlternativesRC {
         // If A is the first round winner and C is excluded, then B shouldn't end up with more votes than A
         (some disj a, b, c : Candidate | {
             isFirstChoiceWinner[a]
-            {add[#{v : Voter | (v.firstChoice = c and v.secondChoice = b)}, #{v: Voter | v.firstChoice = b}] > #{v: Voter | v.firstChoice = a}}
+            {add[#{v : Voter | (v.firstChoice = c and v.secondChoice = b)}, numFirstRoundVotes[b]] > numFirstRoundVotes[a]}
         }) or
         // If A is the second round winner and C is excluded, then B shouldn't end up with enough votes to win round 1 or 2
-        // TODO: Fill in how to check that B would have enought to win round 2
+        // TODO: Fill in how to check that B would have enough to win round 2
         (some disj a, b, c: Candidate | {
             isSecondChoiceWinner[a]
-            {add[#{v: Voter | (v.firstChoice = c and v.secondChoice = b)}, #{v: Voter | v.firstChoice = b}] > NUM_VOTES_TO_BEAT}
+            ({add[#{v: Voter | (v.firstChoice = c and v.secondChoice = b)}, numFirstRoundVotes[b]] > NUM_VOTES_TO_BEAT})
         }) or
         // If A is the third round winner and C is excluded, then B shouldn't end up with enough votes to win round 1, 2, or 3
         // TODO: Fill in how to check that B would have enough to win round 2 or round 3
         (some disj a, b, c: Candidate | {
             isThirdChoiceWinner[a]
-            {add[#{v: Voter | (v.firstChoice = c and v.secondChoice = b)}, #{v: Voter | v.firstChoice = b}] > NUM_VOTES_TO_BEAT}
+            {add[#{v: Voter | (v.firstChoice = c and v.secondChoice = b)}, numFirstRoundVotes[b]] > NUM_VOTES_TO_BEAT}
         })
     }
 }
 
+test expect {
+    vacuousTest: {
+        wellformed
+    } for exactly 3 Candidate, exactly 7 Voter is sat
 
+    canGetWinner: {
+        wellformed
+        eliminationProcedure
+        thereIsAWinner
+    } for exactly 3 Candidate, exactly 7 Voter is sat
+
+    independenceOfIrrelevantAlternativesRCFails: {
+        wellformed
+        eliminationProcedure
+        thereIsAWinner
+        not independenceOfIrrelevantAlternativesRC
+    } for exactly 3 Candidate, exactly 7 Voter is sat
+}
+
+// Run to see examples of a ranked choice vote
 // run {
 //     wellformed
 //     eliminationProcedure
 //     thereIsAWinner
-    
-
 //     // Below 2 lines force interesting examples of RCV
 //     noFirstChoiceWinner
 //     noSecondChoiceWinner // YIELDS Unsat with 3 candidate (presumably impossible to not have a winner after second round w/ 3 candidates and 7 voters)
-
 // } for exactly 4 Candidate, exactly 7 Voter
 
+// Run to see examples of ranked choice voting failing at IIA
+// Tested with exactly 4 Candidate, exactly 7 Voter
+// and with exactly 3 Candidate, exactly 7 Voter
 run {
     wellformed
     eliminationProcedure
     thereIsAWinner
 
     not independenceOfIrrelevantAlternativesRC
-} for exactly 4 Candidate, exactly 7 Voter
+} for exactly 3 Candidate, exactly 7 Voter

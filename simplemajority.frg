@@ -160,6 +160,15 @@ pred independenceOfIrrelevantAlternativesSM {
 
 
 test expect {
+    vacuousTest: {
+        wellformed
+    } for exactly 3 Candidate, exactly 7 Voter is sat
+
+    canGetWinner: {
+        wellformed
+        thereIsAWinner
+    } for exactyl 3 Candidate, exactly 7 Voter is sat
+
     universality_holds_sm: {
         {wellformed and thereIsAWinner} implies universalitySM
     } for exactly 3 Candidate, exactly 7 Voter is theorem
