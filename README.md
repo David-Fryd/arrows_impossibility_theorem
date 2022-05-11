@@ -20,7 +20,7 @@ We chose to examine and apply Arrow's Impossibility Theorem to a simple pluralit
 - Abstracting Arrow's predicates to apply to a generic voting system:
   - Ideally we wanted to write three predicates representing the three predicates of Arrow's impossibility theorem, and apply those same predicates to any voting system. (TODO: Discuss forge limitations, non-extensible/non-dynamic sigs, how different the voting system models were)
 - Alternate Universes/Secret Preferences
-  - Some of Arrow's predicates involve "what-if" assertions, inviting a comparison of two different versions of the same election. "No Dictators" states that *if* one person were to vote differently, they shouldn't be able to change the outcome of the election. Practically this means we have to ... TODO: talk more about simultaneous
+  - Some of Arrow's predicates involve "what-if" assertions, inviting a comparison of two different versions of the same election. "No Dictators" states that *if* one person were to vote differently, they shouldn't be able to change the outcome of the election. Practically this means we have to ... (TODO: talk more about simultaneous)
 - Non-temporal handling of runoff cases in forge
   - Ranked Choice Voting (RCV) requires a "run-off" system ... A lot of the abstraction/simplification choices made for RCV were a direct result of addressing this issue.
 
