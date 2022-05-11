@@ -46,15 +46,13 @@ pred thereIsAnAlternativeWinner {
 }
 
 /*
-    Sets a winner by plurality (most votes) for the election
+    Sets a winner by plurality (more votes than any other candidate) for the election
 */
 pred thereIsAWinner {
     some c : Candidate | isSimplePluralityWinner[c] and Election.winner = c
     thereIsAnAlternativeWinner
 }
 
-
-//TODO: rename this getSimplePluralityWinner?
 fun mostFirstChoiceVotes[e : Election]: one Candidate {
     e.winner
 }
@@ -63,7 +61,7 @@ fun mostFirstChoiceVotes[e : Election]: one Candidate {
 pred noDictatorsSP { 
     //no Voter | firstChoice changing changes outcome
     //no way for there to be an even number of votes assigned to two candidates, and then 1 more vote cast
-    // isSimplePluralityWinnerAbstractVersion doesnt change when a single person's first choice changes
+    //isSimplePluralityWinnerAbstractVersion doesnt change when a single person's first choice changes
     
     no potentialDictator: Voter | {
 
@@ -99,13 +97,7 @@ pred spGroupPreference[a : Candidate, b : Candidate, voterSet: set Voter] {
 pred universalitySP { 
     // For simple plurality, its a bit tautologic, but thats what impossibility translates to here
     //if everyone prefers A to B, then the group prefers A to B
-    all disj a,b : Candidate | spAllVotersPreferAtoB[a, b, Voter] implies spGroupPreference[a, b, Voter]
-        //#{v : Voter | v.firstChoice = a} > #{v : Voter | v.firstChoice = b}
-        /**
-        groupPreference[a,b,V] implies allVoterspreferAtoB[a,b,V] ?
-        (i guess we could pass in fxns "groupPreference" and "allVotersprefer...")
-        */
-    
+    all disj a,b : Candidate | spAllVotersPreferAtoB[a, b, Voter] implies spGroupPreference[a, b, Voter]   
 }
 
 pred independenceOfIrrelevantAlternativesSP {
@@ -123,7 +115,7 @@ pred independenceOfIrrelevantAlternativesSP {
 
     not { 
         some disj a, b, c : Candidate | {
-            isSimplePluralityWinner[a] implies 
+            isSimplePluralityWinner[a]
             {add[#{v : Voter | (v.firstChoice = c and v.secretPreference = b)}, #{v: Voter | v.firstChoice = b}] > #{v: Voter | v.firstChoice = a}}
         }
     }
@@ -145,50 +137,50 @@ pred independenceOfIrrelevantAlternativesSP {
 //     not universality[spAllVotersPreferAtoB, spGroupPreference]
 // }
 
-// test expect {
-//     vacuousTest: {
-//         wellformed
-//     } for exactly 3 Candidate, exactly 7 Voter is sat
+test expect {
+    vacuousTest: {
+        wellformed
+    } for exactly 3 Candidate, exactly 7 Voter is sat
 
-//     canGetWinner: {
-//         wellformed
-//         thereIsAWinner
-//     } for exactly 3 Candidate, exactly 7 Voter is sat
+    canGetWinner: {
+        wellformed
+        thereIsAWinner
+    } for exactly 3 Candidate, exactly 7 Voter is sat
 
-//     universality_holds_sp: {
-//         {wellformed and thereIsAWinner} implies universalitySP
-//     } for exactly 3 Candidate, exactly 7 Voter is theorem
+    universality_holds_sp: {
+        {wellformed and thereIsAWinner} implies universalitySP
+    } for exactly 3 Candidate, exactly 7 Voter is theorem
 
-//     universality_generic_holds_sp: {
-//         {wellformed and thereIsAWinner} implies universality[spAllVotersPreferAtoB, spGroupPreference]
-//     } for exactly 3 Candidate, exactly 7 Voter is theorem
+    universality_generic_holds_sp: {
+        {wellformed and thereIsAWinner} implies universality[spAllVotersPreferAtoB, spGroupPreference]
+    } for exactly 3 Candidate, exactly 7 Voter is theorem
 
-//     //proving that IOIA is satisfiable, but not theorem
-//     possible_independence_of_irrelevant_alternatives_sp: {
-//         wellformed
-//         thereIsAWinner
-//         independenceOfIrrelevantAlternativesSP
-//     } for exactly 3 Candidate, exactly 7 Voter is sat
+    //proving that IOIA is satisfiable, but not theorem
+    possible_independence_of_irrelevant_alternatives_sp: {
+        wellformed
+        thereIsAWinner
+        independenceOfIrrelevantAlternativesSP
+    } for exactly 3 Candidate, exactly 7 Voter is sat
 
-//     not_independence_of_irrelevant_alternatives_sp: {
-//         wellformed
-//         thereIsAWinner
-//         not independenceOfIrrelevantAlternativesSP
-//     } for exactly 3 Candidate, exactly 7 Voter is sat
+    not_independence_of_irrelevant_alternatives_sp: {
+        wellformed
+        thereIsAWinner
+        not independenceOfIrrelevantAlternativesSP
+    } for exactly 3 Candidate, exactly 7 Voter is sat
 
-//     //proving that no dictators is satisfiable, but not theorem
-//     no_dictators_sp: {
-//         wellformed
-//         thereIsAWinner
-//         noDictatorsSP
-//     } for exactly 3 Candidate, exactly 7 Voter is sat
+    //proving that no dictators is satisfiable, but not theorem
+    no_dictators_sp: {
+        wellformed
+        thereIsAWinner
+        noDictatorsSP
+    } for exactly 3 Candidate, exactly 7 Voter is sat
 
-//     not_no_dictators_sp: {
-//         wellformed
-//         thereIsAWinner
-//         not noDictatorsSP
-//     } for exactly 3 Candidate, exactly 7 Voter is sat
-// }
+    not_no_dictators_sp: {
+        wellformed
+        thereIsAWinner
+        not noDictatorsSP
+    } for exactly 3 Candidate, exactly 7 Voter is sat
+}
 
 /*
  Uncomment this to see an instance which violates independence of irrelevant alternatives 
@@ -197,20 +189,18 @@ pred independenceOfIrrelevantAlternativesSP {
  instance violating Independence of Irrelevant Alternatives 
  */
 
-run {
-    wellformed
-    thereIsAWinner
+// run {
+//     wellformed
+//     thereIsAWinner
 
-    some disj a, b, winner: Candidate | {
-        #{v: Voter | v.firstChoice = winner} = 6
-        #{v: Voter | v.firstChoice = b} = 1
-        #{v: Voter | v.firstChoice = a} = 0
-    }
+//     some disj a, b, winner: Candidate | {
+//         #{v: Voter | v.firstChoice = winner} = 3
+//         #{v: Voter | v.firstChoice = b} = 2
+//         #{v: Voter | v.firstChoice = a} = 2
+//     }
 
-    //independenceOfIrrelevantAlternativesSP
-} for exactly 3 Candidate, exactly 7 Voter
-
-
+//     not independenceOfIrrelevantAlternativesSP
+// } for exactly 3 Candidate, exactly 7 Voter
 
 
 /*
@@ -219,24 +209,12 @@ run {
 
  instance violating No Dictators
  */
-run {
-    wellformed
-    thereIsAWinner
-
-    not noDictatorsSP
-    // noDictatorsSP // uncomment this and comment out line above if you want to see a non-violating instance
-} for exactly 3 Candidate, exactly 7 Voter
-
-
-
-
 // run {
 //     wellformed
 //     thereIsAWinner
-//     all c : Candidate | {
-//         some v : Voter | v.firstChoice = c
-//     }
-//     not independenceOfIrrelevantAlternativesSP
+
+//     not noDictatorsSP
+//     // noDictatorsSP // uncomment this and comment out line above if you want to see a non-violating instance
 // } for exactly 3 Candidate, exactly 7 Voter
 
 

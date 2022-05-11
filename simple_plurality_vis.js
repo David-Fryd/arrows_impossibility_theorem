@@ -49,7 +49,7 @@ function make_candy(url, my_candidate) {
 //   test_thing.style.height = '10%'
 //   cand_plat.appendChild(test_thing)
 
-if(the_election.join(altWinner).toString() != my_candidate.toString()) {
+if(the_election.join(altWinner).toString() == my_candidate.toString()) {
   img.style["background-color"] = 'yellow'    
 }
 
