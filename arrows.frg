@@ -22,7 +22,10 @@ sig Lambda {}
 
 one sig Election {
     winner: one Candidate,
-    election_voters : set Voter
+    election_voters : set Voter,
+
+    // The winner of an alternate universe election (where applicable)
+    altWinner: one Candidate
 }
 
 
