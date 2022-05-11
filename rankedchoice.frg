@@ -3,12 +3,24 @@ open "arrows.frg"
 
 sig RankedChoiceVoter extends Voter {
     secondChoice: one Candidate,
-    thirdChoice: one Candidate
+    thirdChoice: one Candidate,
+
+    // When examining the possibility of dictators, a 
+    // hypothetical election is run in an alternate universe where
+    // these represent the voter's choices
+    altFirstChoice: one Candidate,
+    altSecondChoice: one Candidate,
+    altThirdChoice: one Candidate
+
 }
 
 one sig EliminatedCandidates {
     firstRound: one Candidate,
-    secondRound: one Candidate
+    secondRound: one Candidate,
+
+    // When running the alternate universe elections, these are the alt elimianted candidate predicates
+    altFirstRound: one Candidate,
+    altSecondRound: one Candidate
 }
 
 pred wellformed {
@@ -24,9 +36,7 @@ pred wellformed {
     
 }
 
-// TODO: Figure out candidate elimination and using second/third preference
-//       of voters whose more preferred candidate is eliminated
-//       Maybe keep track of eliminated candidates in Election sig?
+
 pred isRankedChoiceWinner[c: Candidate] {
     // The candidate either wins any of the rounds
     isFirstChoiceWinner[c] or
@@ -39,6 +49,12 @@ pred isRankedChoiceWinner[c: Candidate] {
     */
 }
 
+pred isAltRankedChoiceWinner[c: Candidate] {
+    isAltFirstChoiceWinner[c] or
+    isAltSecondChoiceWinner[c] or
+    isAltThirdChoiceWinner[c]
+}
+
 // Number of votes to beat (must get more votes than this to have a MAJORITY)
 fun NUM_VOTES_TO_BEAT: one Int {
     divide[#{v: Voter|v in Voter}, 2]
@@ -48,11 +64,20 @@ fun NUM_VOTES_TO_BEAT: one Int {
 pred isEliminatedFirstRound[c: Candidate] {
     EliminatedCandidates.firstRound = c
 }
+// Same as isEliminatedFirstRound using alternate universe voter choices
+pred isEliminatedAltFirstRound[c: Candidate] {
+    EliminatedCandidates.altFirstRound = c
+}
 
 // Has a candidate been eliminated in either the first or second round
 pred isEliminatedFirstOrSecondRound[c: Candidate] {
     (EliminatedCandidates.firstRound = c) or 
     (EliminatedCandidates.secondRound = c)
+}
+// Same as isEliminatedFirstOrSecondRound using alternate universe voter choices
+pred isEliminatedAltFirstOrSecondRound[c: Candidate] {
+    (EliminatedCandidates.altFirstRound = c) or 
+    (EliminatedCandidates.altSecondRound = c)
 }
 
 
@@ -65,6 +90,10 @@ pred isEliminatedFirstOrSecondRound[c: Candidate] {
 fun numFirstRoundVotes[c: Candidate]: one Int {
     #{v: Voter | v.firstChoice = c}
 }
+// same as numFirstRoundVotes using the alternate universe voter choices
+fun numAltFirstRoundVotes[c: Candidate]: one Int {
+    #{v: Voter | v.altFirstChoice = c}
+}
 
 /*
  * How many votes did the candidate receieve in the second round?
@@ -75,6 +104,10 @@ fun numFirstRoundVotes[c: Candidate]: one Int {
 */
 fun numSecondRoundVotes[c: Candidate]: one Int {
     #{v : Voter | v.firstChoice = c or (isEliminatedFirstRound[v.firstChoice] and v.secondChoice = c)}
+}
+// same as numSecondRoundVotes using the alternate universe voter choices
+fun numAltSecondRoundVotes[c: Candidate]: one Int {
+    #{v : Voter | v.altFirstChoice = c or (isEliminatedAltFirstRound[v.altFirstChoice] and v.altSecondChoice = c)}
 }
 
 /*
@@ -91,6 +124,14 @@ fun numThirdRoundVotes[c: Candidate]: one Int {
         (isEliminatedFirstOrSecondRound[v.firstChoice] and isEliminatedFirstOrSecondRound[v.secondChoice] and v.thirdChoice = c)
         )}
 }
+// same as numThirdRoundVotes using the alternate universe voter choices
+fun numAltThirdRoundVotes[c: Candidate]: one Int {
+    #{v : Voter | 
+        (v.altFirstChoice = c or 
+        (isEliminatedAltFirstOrSecondRound[v.altFirstChoice] and v.altSecondChoice = c) or
+        (isEliminatedAltFirstOrSecondRound[v.altFirstChoice] and isEliminatedAltFirstOrSecondRound[v.altSecondChoice] and v.altThirdChoice = c)
+        )}
+} 
 
 /* Determines the candidate that would be eliminated in the first round 
  *
@@ -103,6 +144,16 @@ pred candidateEliminatedFirstRound {
             numFirstRoundVotes[c] <= numFirstRoundVotes[other_c]
         }
         EliminatedCandidates.firstRound = c
+    }
+}
+// same as candidateEliminatedFirstRound using alternate universe voter choices
+pred candidateEliminatedAltFirstRound {
+    // If there is a tie, a random candidate (model abstraction) of the worst performing candidates is considered eliminated
+    some c: Candidate | {
+        all other_c: Candidate | other_c != c implies {
+            numAltFirstRoundVotes[c] <= numAltFirstRoundVotes[other_c]
+        }
+        EliminatedCandidates.altFirstRound = c
     }
 }
 
@@ -122,11 +173,28 @@ pred candidateEliminatedSecondRound {
         EliminatedCandidates.secondRound = c
     }
 }
+// same as candidateEliminatedSecondRound using alternate universe voter choices
+pred candidateEliminatedAltSecondRound {
+    // If there is a tie, a random candidate (model abstraction) of the worst performing candidates is considered eliminated
+    some c: Candidate | {
+        // If candidate was already eliminated in the first round we can't eliminate them again
+        (not isEliminatedAltFirstRound[c])
+
+        all other_c: Candidate | ((not isEliminatedAltFirstRound[other_c]) and other_c != c) implies {
+            numAltSecondRoundVotes[c] <= numAltSecondRoundVotes[other_c]
+        }
+        EliminatedCandidates.altSecondRound = c
+    }
+}
 
 // Ensures that elimination occurs properly at each step (wellformed-esque predicate, SHOULD BE CALLED IN RUN)
 pred eliminationProcedure {
     candidateEliminatedFirstRound
     candidateEliminatedSecondRound
+
+    // Handles alternate universe cases as well
+    candidateEliminatedAltFirstRound
+    candidateEliminatedAltSecondRound
 }
 
 
@@ -135,12 +203,22 @@ pred isFirstChoiceWinner[c: Candidate] {
     // Candidate should get more than 50% of the votes
     numFirstRoundVotes[c] > NUM_VOTES_TO_BEAT
 }
+// same as isFirstChoiceWinner using alternate universe voter choices
+pred isAltFirstChoiceWinner[c: Candidate] {
+    numAltFirstRoundVotes[c] > NUM_VOTES_TO_BEAT
+}
 
 // There are no candidates that have won the first runoff
 pred noFirstChoiceWinner{ 
     // (For 7 candidates, no one got >=4 firstChoice votes)
     no c: Candidate | {
         isFirstChoiceWinner[c]
+    }
+}
+// same as noFirstChoiceWinner using alternate universe voter choices
+pred noAltFirstChoiceWinner {
+    no c: Candidate | {
+        isAltFirstChoiceWinner[c]
     }
 }
 
@@ -153,11 +231,26 @@ pred isSecondChoiceWinner[c: Candidate] {
     
     numSecondRoundVotes[c] > NUM_VOTES_TO_BEAT
 }
+// same as isSecondChoiceWinner using alternate universe voter choices
+pred isAltSecondChoiceWinner[c: Candidate] {
+    // Candidate can only win as a secondChoiceWinner if there were no first choice winners
+    noAltFirstChoiceWinner
+    // Can't have been eliminated (otherwise can't win)
+    not isEliminatedAltFirstRound[c]
+    
+    numAltSecondRoundVotes[c] > NUM_VOTES_TO_BEAT
+}
 
 // There are no candidates that have won the first runoff
 pred noSecondChoiceWinner{ // (For 7 candidates, no one got >=4 firstChoice votes)
     no c: Candidate | {
         isSecondChoiceWinner[c]
+    }
+}
+// same as noSecondChoiceWinner using alternate universe voter choices
+pred noAltSecondChoiceWinner {
+    no c: Candidate | {
+        isAltSecondChoiceWinner[c]
     }
 }
 
@@ -169,6 +262,16 @@ pred isThirdChoiceWinner[c: Candidate] {
     not isEliminatedFirstOrSecondRound[c]
 
     numThirdRoundVotes[c] > NUM_VOTES_TO_BEAT
+}
+// same as isThirdChoiceWinner using alternate universe voter choices
+pred isAltThirdChoiceWinner[c: Candidate] {
+    // Candidate can only win as a thirdChoiceWinner if there were no second choice winners
+    noAltSecondChoiceWinner
+
+    // Can't have been eliminated (otherwise can't win)
+    not isEliminatedAltFirstOrSecondRound[c]
+
+    numAltThirdRoundVotes[c] > NUM_VOTES_TO_BEAT
 }
 
 
@@ -191,6 +294,23 @@ pred noDictatorsRC {
     //      changeSecondPref[v] does not change winner and
     //      changeThirdPref[v] does not change winner
     // }
+    no potentialDictator: Voter | {
+
+        all other_voter: Voter | other_voter!=potentialDictator implies {
+                other_voter.firstChoice = other_voter.altFirstChoice
+                other_voter.secondChoice = other_voter.altSecondChoice
+                other_voter.thirdChoice = other_voter.altThirdChoice
+        }
+        potentialDictator.firstChoice != potentialDictator.altFirstChoice
+        potentialDictator.secondChoice != potentialDictator.altSecondChoice
+        potentialDictator.thirdChoice != potentialDictator.altThirdChoice
+
+        // NOTE: We just care if the election result *CHANGES*, not necessarily that the dictator gets their preferred candidate either way
+        some winner: Candidate | {
+            isRankedChoiceWinner[winner]
+            not isAltRankedChoiceWinner[winner]
+        }
+    }
 }
 
 pred rcHasPrefForA[a: Candidate, b: Candidate, v: Voter] {
@@ -266,6 +386,17 @@ pred independenceOfIrrelevantAlternativesRC {
     }
 }
 
+
+run {
+    wellformed
+    eliminationProcedure
+    thereIsAWinner
+
+    not noDictatorsRC
+
+
+} for exactly 3 Candidate, exactly 7 Voter
+
 test expect {
     vacuousTest: {
         wellformed
@@ -302,6 +433,8 @@ run {
     wellformed
     eliminationProcedure
     thereIsAWinner
+
+    not noDictatorsRC
 
     not independenceOfIrrelevantAlternativesRC
 } for exactly 3 Candidate, exactly 7 Voter
