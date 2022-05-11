@@ -275,11 +275,22 @@ pred isAltThirdChoiceWinner[c: Candidate] {
 }
 
 
+// same as thereIsAWinner using alternate universe voter choices
+pred thereIsAnAltWinner {
+    some c: Candidate | {
+        isAltRankedChoiceWinner[c]
+        Election.altWinner = c
+    }
+}
+
 pred thereIsAWinner {
     some c: Candidate | {
         isRankedChoiceWinner[c]
         Election.winner = c
     }
+
+    // Run thereIsAnAltWinner required when running noDictators
+    thereIsAnAltWinner
 }
 
 fun getRankedChoiceWinner[e: Election]: one Candidate {
@@ -391,6 +402,10 @@ run {
     wellformed
     eliminationProcedure
     thereIsAWinner
+
+    // TODO: write testExpects
+    noFirstChoiceWinner
+    not noAltFirstChoiceWinner
 
     not noDictatorsRC
 
