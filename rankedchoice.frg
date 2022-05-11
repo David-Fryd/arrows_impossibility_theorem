@@ -210,12 +210,35 @@ pred rcGroupPreference[a: Candidate, b: Candidate, voterSet: set Voter] {
     // # of voters who prefer a to b where a is first and b second and
     // # of voters who prefer a to b where a is first and b is third and
     // # of voters who prefer a to b where a is second and b is third
+
+    //there is a group preference for candidate A iff...
+    //voters who have A as first choice + voters who have A as second and A as third
+    //is greater than
+    //voters who have B as first choice + voters who have B as second and A as third
+    {
+    add[#{vot : Voter | vot in voterSet and vot.firstChoice = a},
+        #{vot : Voter | vot in voterSet and vot.secondChoice = a and vot.thirdChoice = b}]
+     >
+    add[#{vot : Voter | vot in voterSet and vot.firstChoice = b},
+        #{vot : Voter | vot in voterSet and vot.secondChoice = b and vot.thirdChoice = a}]
+    }
 }
 
 // if every voter prefers alternative X over alternative Y, then the group prefers X over Y
 // ref. : https://en.wikipedia.org/wiki/Arrow%27s_impossibility_theorem
 pred universalityRC {
     all disj a, b: Candidate | rcAllVotersPreferAtoB[a, b, Voter] implies rcGroupPreference[a, b, Voter]
+}
+
+test expect { //is theorem :P
+    vacuity_rc: {
+        wellformed
+        thereIsAWinner
+    } is sat
+
+    universality_holds_rc: {
+        {wellformed and thereIsAWinner} implies universalityRC
+    } for exactly 3 Candidate is theorem
 }
 
 // if every voter's preference between X and Y remains unchanged, 
