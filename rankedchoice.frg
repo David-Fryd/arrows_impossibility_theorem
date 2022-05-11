@@ -222,18 +222,44 @@ pred universalityRC {
 // then the group's preference between X and Y will also remain unchanged
 // ref. : https://en.wikipedia.org/wiki/Arrow%27s_impossibility_theorem
 pred independenceOfIrrelevantAlternativesRC {
-    // TODO: Fill in
+    not { 
+        // If A is the first round winner and C is excluded, then B shouldn't end up with more votes than A
+        (some disj a, b, c : Candidate | {
+            isFirstChoiceWinner[a]
+            {add[#{v : Voter | (v.firstChoice = c and v.secondChoice = b)}, #{v: Voter | v.firstChoice = b}] > #{v: Voter | v.firstChoice = a}}
+        }) or
+        // If A is the second round winner and C is excluded, then B shouldn't end up with enough votes to win round 1 or 2
+        // TODO: Fill in how to check that B would have enought to win round 2
+        (some disj a, b, c: Candidate | {
+            isSecondChoiceWinner[a]
+            {add[#{v: Voter | (v.firstChoice = c and v.secondChoice = b)}, #{v: Voter | v.firstChoice = b}] > NUM_VOTES_TO_BEAT}
+        }) or
+        // If A is the third round winner and C is excluded, then B shouldn't end up with enough votes to win round 1, 2, or 3
+        // TODO: Fill in how to check that B would have enough to win round 2 or round 3
+        (some disj a, b, c: Candidate | {
+            isThirdChoiceWinner[a]
+            {add[#{v: Voter | (v.firstChoice = c and v.secondChoice = b)}, #{v: Voter | v.firstChoice = b}] > NUM_VOTES_TO_BEAT}
+        })
+    }
 }
 
+
+// run {
+//     wellformed
+//     eliminationProcedure
+//     thereIsAWinner
+    
+
+//     // Below 2 lines force interesting examples of RCV
+//     noFirstChoiceWinner
+//     noSecondChoiceWinner // YIELDS Unsat with 3 candidate (presumably impossible to not have a winner after second round w/ 3 candidates and 7 voters)
+
+// } for exactly 4 Candidate, exactly 7 Voter
 
 run {
     wellformed
     eliminationProcedure
     thereIsAWinner
-    
 
-    // Below 2 lines force interesting examples of RCV
-    noFirstChoiceWinner
-    noSecondChoiceWinner // YIELDS Unsat with 3 candidate (presumably impossible to not have a winner after second round w/ 3 candidates and 7 voters)
-
+    not independenceOfIrrelevantAlternativesRC
 } for exactly 4 Candidate, exactly 7 Voter
