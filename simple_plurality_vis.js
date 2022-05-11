@@ -1,5 +1,7 @@
 const candies = Candidate
-const voties = SimpleMajorityVoter
+const voties = SimplePluralityVoter
+const the_election = Election
+
 const candy_url1 = '/Users/juliamccauley/Desktop/cs1710/projects/arrows_impossibility_theorem/vis_resources/candidate1.svg'
 const candy_url2 = '/Users/juliamccauley/Desktop/cs1710/projects/arrows_impossibility_theorem/vis_resources/candidate2.svg'
 const candy_url3 = '/Users/juliamccauley/Desktop/cs1710/projects/arrows_impossibility_theorem/vis_resources/candidate3.svg'
@@ -46,6 +48,10 @@ function make_candy(url, my_candidate) {
 //   test_thing.style.width = '10%'
 //   test_thing.style.height = '10%'
 //   cand_plat.appendChild(test_thing)
+
+if(the_election.join(altWinner).toString() != my_candidate.toString()) {
+  img.style["background-color"] = 'yellow'    
+}
 
   console.log("hello I am here :DDDD")
   cand_plat.appendChild(img)

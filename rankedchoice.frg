@@ -361,17 +361,6 @@ pred universalityRC {
     all disj a, b: Candidate | rcAllVotersPreferAtoB[a, b, Voter] implies rcGroupPreference[a, b, Voter]
 }
 
-test expect { //is theorem :P
-    vacuity_rc: {
-        wellformed
-        thereIsAWinner
-    } is sat
-
-    universality_holds_rc: {
-        {wellformed and thereIsAWinner} implies universalityRC
-    } for exactly 3 Candidate is theorem
-}
-
 // if every voter's preference between X and Y remains unchanged, 
 // then the group's preference between X and Y will also remain unchanged
 // ref. : https://en.wikipedia.org/wiki/Arrow%27s_impossibility_theorem
@@ -397,6 +386,21 @@ pred independenceOfIrrelevantAlternativesRC {
     }
 }
 
+/* Run statements to prove that passing functions as arguments is working */
+run { 
+    //should run fine
+    wellformed
+    thereIsAWinner
+    universality[rcAllVotersPreferAtoB, rcGroupPreference]
+}
+
+run { 
+    //should produce unsat
+    wellformed
+    thereIsAWinner
+    not universality[rcAllVotersPreferAtoB, rcGroupPreference]
+}
+
 
 run {
     wellformed
@@ -413,21 +417,34 @@ run {
 } for exactly 3 Candidate, exactly 7 Voter
 
 test expect {
-    vacuousTest: {
+    vacuity_rc: {
         wellformed
-    } for exactly 3 Candidate, exactly 7 Voter is sat
+    } is sat
 
     canGetWinner: {
         wellformed
         eliminationProcedure
         thereIsAWinner
-    } for exactly 3 Candidate, exactly 7 Voter is sat
+    } is sat
 
-    independenceOfIrrelevantAlternativesRCFails: {
+    universality_holds_rc: {
+        {wellformed and thereIsAWinner} implies universalityRC
+    } for exactly 3 Candidate is theorem
+
+    // There are counterexamples where IIA fails for ranked choice voting
+    independence_of_irrelevant_alternatives_rc_fails: {
         wellformed
         eliminationProcedure
         thereIsAWinner
         not independenceOfIrrelevantAlternativesRC
+    } for exactly 3 Candidate, exactly 7 Voter is sat
+
+    // There are also instances where IIA is upheld for ranked choice voting
+    independence_of_irrelevant_alternatives_rc: {
+        wellformed
+        eliminationProcedure
+        thereIsAWinner
+        independenceOfIrrelevantAlternativesRC
     } for exactly 3 Candidate, exactly 7 Voter is sat
 }
 
