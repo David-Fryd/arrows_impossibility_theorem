@@ -2,10 +2,9 @@
 open "arrows.frg"
 
 
-//may add hidden preferences to 
 sig SimplePluralityVoter extends Voter {
     // If you eliminated their first choice, they would vote for this candidate
-   secretPreference: one Candidate
+    secretPreference: one Candidate
 }
 
 
@@ -21,31 +20,39 @@ pred wellformed {
     // all v : Voter | (v.firstChoice != v.secretPreference)
 }
 
-/* enforces that the winner of the election has the most votes */
+/* 
+    Enforces that the winner of the election has the most votes 
+*/
 pred isSimplePluralityWinner[c : Candidate] { //todo: take in a set of simpleplurality voters
     all other_c : Candidate | other_c != c implies {
         #{sv : SimplePluralityVoter | sv.firstChoice = c} > #{sv : SimplePluralityVoter | sv.firstChoice = other_c}
     }
 }
 
-/* enforces that the winner of the election has the most votes using people's secret preferences */
+/* 
+    Enforces that the winner of the election has the most votes using people's secret preferences 
+*/
 pred isSimplePluralityWinnerSecretPref[c : Candidate] { //todo: take in a set of simpleplurality voters
     all other_c : Candidate | other_c != c implies {
         #{sv : SimplePluralityVoter | sv.secretPreference = c} > #{sv : SimplePluralityVoter | sv.secretPreference = other_c}
     }
 }
 
-
-// TODO: Replace the original [isSimplePluralityWinner] eventually
-pred isSimplePluralityWinnerAbstractVersion[c : Candidate] { //todo: take in a set of simpleplurality voters
-    all other_c : Candidate | other_c != c implies {
-        #{sv : SimplePluralityVoter | sv.firstChoice = c} > #{sv : SimplePluralityVoter | sv.firstChoice = other_c}
-    }
+/*
+    Sets an alternative winner based on secret preferences for visualizing no dictators
+*/
+pred thereIsAnAlternativeWinner {
+    some c : Candidate | isSimplePluralityWinnerSecretPref[c] and Election.altWinner = c
 }
 
+/*
+    Sets a winner by plurality (most votes) for the election
+*/
 pred thereIsAWinner {
     some c : Candidate | isSimplePluralityWinner[c] and Election.winner = c
+    thereIsAnAlternativeWinner
 }
+
 
 //TODO: rename this getSimplePluralityWinner?
 fun mostFirstChoiceVotes[e : Election]: one Candidate {
@@ -123,83 +130,101 @@ pred independenceOfIrrelevantAlternativesSP {
     
 }
 
-// run {
-//     wellformed
-//     some c : Candidate | isSimplePluralityWinner[c] and Election.winner = c 
-//     not universalitySP
-// } for exactly 3 Candidate
-
-//universality general
-run {
-
-}
-
-test expect {
-    vacuousTest: {
-        wellformed
-    } for exactly 3 Candidate, exactly 7 Voter is sat
-
-    canGetWinner: {
-        wellformed
-        thereIsAWinner
-    } for exactly 3 Candidate, exactly 7 Voter is sat
-
-    universality_holds_sp: {
-        {wellformed and thereIsAWinner} implies universalitySP
-    } for exactly 3 Candidate, exactly 7 Voter is theorem
-
-    //proving that IOIA is satisfiable, but not theorem
-    possible_independence_of_irrelevant_alternatives_sp: {
-        wellformed
-        thereIsAWinner
-        independenceOfIrrelevantAlternativesSP
-    } for exactly 3 Candidate, exactly 7 Voter is sat
-
-    not_independence_of_irrelevant_alternatives_sp: {
-        wellformed
-        thereIsAWinner
-        not independenceOfIrrelevantAlternativesSP
-    } for exactly 3 Candidate, exactly 7 Voter is sat
-
-    //proving that no dictators is satisfiable, but not theorem
-    no_dictators_sp: {
-        wellformed
-        thereIsAWinner
-        noDictatorsSP
-    } for exactly 3 Candidate, exactly 7 Voter is sat
-
-    not_no_dictators_sp: {
-        wellformed
-        thereIsAWinner
-        not noDictatorsSP
-    } for exactly 3 Candidate, exactly 7 Voter is sat
-}
-
-// Independence of Irrelevant Alternatives
-// run {
+/* Run statements to prove that passing functions as arguments is working */
+// run { 
+//     //should run fine
 //     wellformed
 //     thereIsAWinner
+//     universality[spAllVotersPreferAtoB, spGroupPreference]
+// }
 
-//     some disj a, b, winner: Candidate | {
-//         #{v: Voter | v.firstChoice = winner} = 3
-//         #{v: Voter | v.firstChoice = b} = 2
-//         #{v: Voter | v.firstChoice = a} = 2
-//     }
+// run { 
+//     //should produce unsat
+//     wellformed
+//     thereIsAWinner
+//     not universality[spAllVotersPreferAtoB, spGroupPreference]
+// }
 
-//     not independenceOfIrrelevantAlternativesSP
-// } for exactly 3 Candidate, exactly 7 Voter
+// test expect {
+//     vacuousTest: {
+//         wellformed
+//     } for exactly 3 Candidate, exactly 7 Voter is sat
+
+//     canGetWinner: {
+//         wellformed
+//         thereIsAWinner
+//     } for exactly 3 Candidate, exactly 7 Voter is sat
+
+//     universality_holds_sp: {
+//         {wellformed and thereIsAWinner} implies universalitySP
+//     } for exactly 3 Candidate, exactly 7 Voter is theorem
+
+//     universality_generic_holds_sp: {
+//         {wellformed and thereIsAWinner} implies universality[spAllVotersPreferAtoB, spGroupPreference]
+//     } for exactly 3 Candidate, exactly 7 Voter is theorem
+
+//     //proving that IOIA is satisfiable, but not theorem
+//     possible_independence_of_irrelevant_alternatives_sp: {
+//         wellformed
+//         thereIsAWinner
+//         independenceOfIrrelevantAlternativesSP
+//     } for exactly 3 Candidate, exactly 7 Voter is sat
+
+//     not_independence_of_irrelevant_alternatives_sp: {
+//         wellformed
+//         thereIsAWinner
+//         not independenceOfIrrelevantAlternativesSP
+//     } for exactly 3 Candidate, exactly 7 Voter is sat
+
+//     //proving that no dictators is satisfiable, but not theorem
+//     no_dictators_sp: {
+//         wellformed
+//         thereIsAWinner
+//         noDictatorsSP
+//     } for exactly 3 Candidate, exactly 7 Voter is sat
+
+//     not_no_dictators_sp: {
+//         wellformed
+//         thereIsAWinner
+//         not noDictatorsSP
+//     } for exactly 3 Candidate, exactly 7 Voter is sat
+// }
+
+/*
+ Uncomment this to see an instance which violates independence of irrelevant alternatives 
+ For this, the most useful visualization tool are the tables in Sterling!
+
+ instance violating Independence of Irrelevant Alternatives 
+ */
+
+run {
+    wellformed
+    thereIsAWinner
+
+    some disj a, b, winner: Candidate | {
+        #{v: Voter | v.firstChoice = winner} = 6
+        #{v: Voter | v.firstChoice = b} = 1
+        #{v: Voter | v.firstChoice = a} = 0
+    }
+
+    //independenceOfIrrelevantAlternativesSP
+} for exactly 3 Candidate, exactly 7 Voter
 
 
 
 
+/*
+ Uncomment this to see an instance which violates no dictators
+ For this, the simple plurality visualizer will be useful to see which voter is the "dictator"
 
-// No Dictators
+ instance violating No Dictators
+ */
 run {
     wellformed
     thereIsAWinner
 
     not noDictatorsSP
-    // noDictatorsSP //noDictatorsSP is unsat!
+    // noDictatorsSP // uncomment this and comment out line above if you want to see a non-violating instance
 } for exactly 3 Candidate, exactly 7 Voter
 
 
