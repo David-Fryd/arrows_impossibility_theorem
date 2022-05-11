@@ -3,7 +3,7 @@ open "arrows.frg"
 
 
 //may add hidden preferences to 
-sig SimpleMajorityVoter extends Voter {
+sig SimplePluralityVoter extends Voter {
     // If you eliminated their first choice, they would vote for this candidate
    secretPreference: one Candidate
 }
@@ -14,49 +14,49 @@ sig SimpleMajorityVoter extends Voter {
 */
 pred wellformed {
     #Candidate = 3
-    #SimpleMajorityVoter > #Candidate
-    all v : Voter | v in SimpleMajorityVoter
+    #SimplePluralityVoter > #Candidate
+    all v : Voter | v in SimplePluralityVoter
     Election.election_voters = Voter
     // TODO: Does this have to be true? 
     // all v : Voter | (v.firstChoice != v.secretPreference)
 }
 
 /* enforces that the winner of the election has the most votes */
-pred isSimpleMajorityWinner[c : Candidate] { //todo: take in a set of simplemajority voters
+pred isSimplePluralityWinner[c : Candidate] { //todo: take in a set of simpleplurality voters
     all other_c : Candidate | other_c != c implies {
-        #{sv : SimpleMajorityVoter | sv.firstChoice = c} > #{sv : SimpleMajorityVoter | sv.firstChoice = other_c}
+        #{sv : SimplePluralityVoter | sv.firstChoice = c} > #{sv : SimplePluralityVoter | sv.firstChoice = other_c}
     }
 }
 
 /* enforces that the winner of the election has the most votes using people's secret preferences */
-pred isSimpleMajorityWinnerSecretPref[c : Candidate] { //todo: take in a set of simplemajority voters
+pred isSimplePluralityWinnerSecretPref[c : Candidate] { //todo: take in a set of simpleplurality voters
     all other_c : Candidate | other_c != c implies {
-        #{sv : SimpleMajorityVoter | sv.secretPreference = c} > #{sv : SimpleMajorityVoter | sv.secretPreference = other_c}
+        #{sv : SimplePluralityVoter | sv.secretPreference = c} > #{sv : SimplePluralityVoter | sv.secretPreference = other_c}
     }
 }
 
 
-// TODO: Replace the original [isSimpleMajorityWinner] eventually
-pred isSimpleMajorityWinnerAbstractVersion[c : Candidate] { //todo: take in a set of simplemajority voters
+// TODO: Replace the original [isSimplePluralityWinner] eventually
+pred isSimplePluralityWinnerAbstractVersion[c : Candidate] { //todo: take in a set of simpleplurality voters
     all other_c : Candidate | other_c != c implies {
-        #{sv : SimpleMajorityVoter | sv.firstChoice = c} > #{sv : SimpleMajorityVoter | sv.firstChoice = other_c}
+        #{sv : SimplePluralityVoter | sv.firstChoice = c} > #{sv : SimplePluralityVoter | sv.firstChoice = other_c}
     }
 }
 
 pred thereIsAWinner {
-    some c : Candidate | isSimpleMajorityWinner[c] and Election.winner = c
+    some c : Candidate | isSimplePluralityWinner[c] and Election.winner = c
 }
 
-//TODO: rename this getSimpleMajorityWinner?
+//TODO: rename this getSimplePluralityWinner?
 fun mostFirstChoiceVotes[e : Election]: one Candidate {
     e.winner
 }
 
 // We simulate 2 parallel elections where other voters choices in both elections (firstChoice & secretPref represent)
-pred noDictatorsSM { 
+pred noDictatorsSP { 
     //no Voter | firstChoice changing changes outcome
     //no way for there to be an even number of votes assigned to two candidates, and then 1 more vote cast
-    // isSimpleMajorityWinnerAbstractVersion doesnt change when a single person's first choice changes
+    // isSimplePluralityWinnerAbstractVersion doesnt change when a single person's first choice changes
     
     no potentialDictator: Voter | {
 
@@ -67,41 +67,15 @@ pred noDictatorsSM {
 
         // NOTE: We just care if the election result *CHANGES*, not necessarily that the dictator gets their preferred candidate either way
         some winner: Candidate | {
-            isSimpleMajorityWinner[winner]
-            not isSimpleMajorityWinnerSecretPref[winner]
+            isSimplePluralityWinner[winner]
+            not isSimplePluralityWinnerSecretPref[winner]
         }
     }
-
-         
-    
-    // not{
-    //     // NOTE: We just care if the election result *CHANGES*, not necessarily that the dictator gets their preferred candidate either way
-    //     some dictator: Voter, winner: Candidate | {
-    //         isSimpleMajorityWinner[winner]
-    //         not isSimpleMajorityWinnerSecretPref[winner]
-    //     }
-
-    //     // isSimpleMajorityWinnerSecretPref[]
-       
-    //     // // dictators choice 1 and original winner of the election not necessarily disjoint
-    //     // some dictator: Voter, disj winner1,winner2: Candidate | {
-
-    //     //     all other_voter: Voter | other_voter!=dictator implies {
-    //     //         other_voter.firstChoice = other_voter.secretPreference
-    //     //     } 
-    //     //     dictator.firstChoice != dictator.secretPreference
-
-
-    //     //     (dictator.firstChoice = winner1) implies isSimpleMajorityWinner[originalWinner]
-    //     //     (dictator.firstChoice = winner2) implies not isSimpleMajorityWinner[originalWinner]
-    //     // }
-    // }
 }
 
 
 pred smHasPrefForA[a : Candidate, b : Candidate, v : Voter] {
     v.firstChoice = a
-    // for simple majority, implicitly v.firstChoice != b
 }
 
 pred smAllVotersPreferAtoB[a : Candidate, b : Candidate, voterSet: set Voter] {
@@ -114,10 +88,9 @@ pred smGroupPreference[a : Candidate, b : Candidate, voterSet: set Voter] {
     #{vot : Voter | vot in voterSet and vot.firstChoice = a} > #{vot : Voter | vot in voterSet and vot.firstChoice = b}
 }
 
-// TODO: Eventually just "pred universality" that works for all systems,
-// TODO: Pass in a "hasPreferenceForA" fxn dependent on the voting system itself
-pred universalitySM { 
-    // For simple majority, its a bit tautologic, but thats what impossibility translates to here
+//Universality predicate specific to Simple Plurality
+pred universalitySP { 
+    // For simple plurality, its a bit tautologic, but thats what impossibility translates to here
     //if everyone prefers A to B, then the group prefers A to B
     all disj a,b : Candidate | smAllVotersPreferAtoB[a, b, Voter] implies smGroupPreference[a, b, Voter]
         //#{v : Voter | v.firstChoice = a} > #{v : Voter | v.firstChoice = b}
@@ -128,24 +101,22 @@ pred universalitySM {
     
 }
 
-pred independenceOfIrrelevantAlternativesSM {
-    /*
-        Idea... model hidden preferences? 
-        For Simple Majority
+pred independenceOfIrrelevantAlternativesSP {
+    /* Here we model hidden preferences s.t. 
         If there exist candidates A and B
         then there should be no way for a Candidate C to come along s.t. 
         the voter's preference between A and B remain the same, 
         but the group's preferences between A and B change
-        Can easily see how this can happen if 
+        
+        in other words, if we remove candidate C, does B now win over A? 
     */
-    //if we remove candidate C, does B now win over A? 
 
     // Guard condition
     all v : Voter | (v.firstChoice != v.secretPreference)
 
     not { 
         some disj a, b, c : Candidate | {
-            isSimpleMajorityWinner[a] implies 
+            isSimplePluralityWinner[a] implies 
             {add[#{v : Voter | (v.firstChoice = c and v.secretPreference = b)}, #{v: Voter | v.firstChoice = b}] > #{v: Voter | v.firstChoice = a}}
         }
     }
@@ -154,10 +125,14 @@ pred independenceOfIrrelevantAlternativesSM {
 
 // run {
 //     wellformed
-//     some c : Candidate | isSimpleMajorityWinner[c] and Election.winner = c 
-//     not universalitySM
+//     some c : Candidate | isSimplePluralityWinner[c] and Election.winner = c 
+//     not universalitySP
 // } for exactly 3 Candidate
 
+//universality general
+run {
+
+}
 
 test expect {
     vacuousTest: {
@@ -169,20 +144,34 @@ test expect {
         thereIsAWinner
     } for exactly 3 Candidate, exactly 7 Voter is sat
 
-    universality_holds_sm: {
-        {wellformed and thereIsAWinner} implies universalitySM
+    universality_holds_sp: {
+        {wellformed and thereIsAWinner} implies universalitySP
     } for exactly 3 Candidate, exactly 7 Voter is theorem
 
-    independence_of_irrelevant_alternatives_sm: {
+    //proving that IOIA is satisfiable, but not theorem
+    possible_independence_of_irrelevant_alternatives_sp: {
         wellformed
         thereIsAWinner
-        not independenceOfIrrelevantAlternativesSM
+        independenceOfIrrelevantAlternativesSP
     } for exactly 3 Candidate, exactly 7 Voter is sat
 
-    no_dictators_sm: {
+    not_independence_of_irrelevant_alternatives_sp: {
         wellformed
         thereIsAWinner
-        not noDictatorsSM
+        not independenceOfIrrelevantAlternativesSP
+    } for exactly 3 Candidate, exactly 7 Voter is sat
+
+    //proving that no dictators is satisfiable, but not theorem
+    no_dictators_sp: {
+        wellformed
+        thereIsAWinner
+        noDictatorsSP
+    } for exactly 3 Candidate, exactly 7 Voter is sat
+
+    not_no_dictators_sp: {
+        wellformed
+        thereIsAWinner
+        not noDictatorsSP
     } for exactly 3 Candidate, exactly 7 Voter is sat
 }
 
@@ -209,8 +198,8 @@ run {
     wellformed
     thereIsAWinner
 
-    not noDictatorsSM
-    // noDictatorsSM //noDictatorsSM is unsat!
+    not noDictatorsSP
+    // noDictatorsSP //noDictatorsSP is unsat!
 } for exactly 3 Candidate, exactly 7 Voter
 
 
@@ -222,7 +211,7 @@ run {
 //     all c : Candidate | {
 //         some v : Voter | v.firstChoice = c
 //     }
-//     not independenceOfIrrelevantAlternativesSM
+//     not independenceOfIrrelevantAlternativesSP
 // } for exactly 3 Candidate, exactly 7 Voter
 
 

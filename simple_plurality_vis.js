@@ -1,5 +1,5 @@
 const candies = Candidate
-const voties = SimpleMajorityVoter
+const voties = SimplePluralityVoter
 const candy_url1 = '/Users/juliamccauley/Desktop/cs1710/projects/arrows_impossibility_theorem/vis_resources/candidate1.svg'
 const candy_url2 = '/Users/juliamccauley/Desktop/cs1710/projects/arrows_impossibility_theorem/vis_resources/candidate2.svg'
 const candy_url3 = '/Users/juliamccauley/Desktop/cs1710/projects/arrows_impossibility_theorem/vis_resources/candidate3.svg'
