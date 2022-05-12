@@ -16,6 +16,9 @@ We chose to examine and apply Arrow's Impossibility Theorem to a simple pluralit
 - **No Dictators:**: The principle of No Dictators is *not always true (not theorem)* for both simple pluraility and ranked choice voting systems. i.e. there are cases which respect this principle, and other cases that do not.
 
 
+## Video for use in presentation:
+https://www.youtube.com/watch?v=pc2huhoDGLU
+
 ## Challenges/Obstacles
 - Abstracting Arrow's predicates to apply to a generic voting system:
   - Ideally we wanted to write three predicates representing the three predicates of Arrow's impossibility theorem, and apply those same predicates to any voting system. 
