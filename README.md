@@ -33,7 +33,7 @@ We chose to examine and apply Arrow's Impossibility Theorem to a simple pluralit
     - Because the run-off procedures had to be explicitly defined at each step, we chose to simplify the model and only consider a 3-choice RCV system. This allows us to produce interesting results and make general assertions about RCV while not overcomplicating the model.
 
 
-### **Abstractions/Choices **
+### **Abstractions/Choices**
 
 - All Voters vote in the election. We do not consider people who abstain/don't vote in our model because practically they are not "voters" in the election. We restrict ourselves to analyzing voters because they are the logically relevant components to voting systems, particularly when it comes to Arrow's impossibility theorem.
 
@@ -50,6 +50,4 @@ We chose to examine and apply Arrow's Impossibility Theorem to a simple pluralit
   - It is true that some RCV systems offer more choices than a voter must choose, but for the sake of modeling an ideal-RCV election (and making assertions about the ideal system) combined with Forge model challenges, we chose to enforce that all Voters provide a candidate for each possible choice.
 - Each voter has exactly 3 choices to rank
   - While in many RCV systems, the number of choices you could enter is theoretically limited by the number of candidates of an election, challenges with modeling RCV in Forge lead us to choose 3 choices as a happy medium. (See our section re: Challenges/Obstacles)
-
-
 - A lot of the abstraction/simplification choices made for RCV were a direct response to challenging Forge limitations combined with how we decided to model RCV non-temporally.
