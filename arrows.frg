@@ -17,7 +17,7 @@ one sig Election {
 }
 
 
-//generic version of universality to prove that you can pass functions as arguments :,)
+//GENERIC version of universality to prove that you can pass functions as arguments :,)
 
 /* 
     If every voter prefers A to B, then the group prefers A to B.

@@ -110,30 +110,44 @@ pred independenceOfIrrelevantAlternativesSP {
         in other words, if we remove candidate C, does B now win over A? 
     */
 
-    // Guard condition
-    all v : Voter | (v.firstChoice != v.secretPreference)
-
     not { 
         some disj a, b, c : Candidate | {
-            isSimplePluralityWinner[a]
+            isSimplePluralityWinner[a] 
             {add[#{v : Voter | (v.firstChoice = c and v.secretPreference = b)}, #{v: Voter | v.firstChoice = b}] > #{v: Voter | v.firstChoice = a}}
         }
     }
     
 }
 
+/*
+
+Helper preds for universality which are specific to Simple Plurality, for reference
+pred spAllVotersPreferAtoB[a : Candidate, b : Candidate, voterSet: set Voter] {
+    all v: Voter | v in voterSet implies {
+        spHasPrefForA[a,b,v]
+    }
+}
+
+pred spGroupPreference[a : Candidate, b : Candidate, voterSet: set Voter] {
+    #{vot : Voter | vot in voterSet and vot.firstChoice = a} > #{vot : Voter | vot in voterSet and vot.firstChoice = b}
+}
+
+*/
+
 /* Run statements to prove that passing functions as arguments is working */
 // run { 
 //     //should run fine
 //     wellformed
 //     thereIsAWinner
-//     universality[spAllVotersPreferAtoB, spGroupPreference]
+//     //GENERIC UNIVERSALITY
+//     universality[spAllVotersPreferAtoB, spGroupPreference] 
 // }
 
 // run { 
 //     //should produce unsat
 //     wellformed
 //     thereIsAWinner
+//     //GENERIC UNIVERSALITY
 //     not universality[spAllVotersPreferAtoB, spGroupPreference]
 // }
 
@@ -159,12 +173,14 @@ test expect {
     possible_independence_of_irrelevant_alternatives_sp: {
         wellformed
         thereIsAWinner
+        all v : Voter | (v.firstChoice != v.secretPreference)
         independenceOfIrrelevantAlternativesSP
     } for exactly 3 Candidate, exactly 7 Voter is sat
 
     not_independence_of_irrelevant_alternatives_sp: {
         wellformed
         thereIsAWinner
+        all v : Voter | (v.firstChoice != v.secretPreference)
         not independenceOfIrrelevantAlternativesSP
     } for exactly 3 Candidate, exactly 7 Voter is sat
 
@@ -189,19 +205,31 @@ test expect {
  instance violating Independence of Irrelevant Alternatives 
  */
 
-// run {
-//     wellformed
-//     thereIsAWinner
+run {
+    wellformed
+    thereIsAWinner
 
-//     some disj a, b, winner: Candidate | {
-//         #{v: Voter | v.firstChoice = winner} = 3
-//         #{v: Voter | v.firstChoice = b} = 2
-//         #{v: Voter | v.firstChoice = a} = 2
-//     }
+    some disj a, b, winner: Candidate | {
+        #{v: Voter | v.firstChoice = winner} = 3
+        #{v: Voter | v.firstChoice = b} = 2
+        #{v: Voter | v.firstChoice = a} = 2
+    }
+    all v : Voter | (v.firstChoice != v.secretPreference)   
+    not independenceOfIrrelevantAlternativesSP
+} for exactly 3 Candidate, exactly 7 Voter
 
-//     not independenceOfIrrelevantAlternativesSP
-// } for exactly 3 Candidate, exactly 7 Voter
 
+
+run {
+    wellformed
+    thereIsAWinner
+    //independenceOfIrrelevantAlternativesSP
+    // Uncomment below line and comment above line to get instances that do not comply w/ IIA
+
+    //guard condition for IOIA
+    all v : Voter | (v.firstChoice != v.secretPreference)
+    not independenceOfIrrelevantAlternativesSP
+} for exactly 3 Candidate, exactly 7 Voter
 
 /*
  Uncomment this to see an instance which violates no dictators
