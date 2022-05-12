@@ -387,34 +387,34 @@ pred independenceOfIrrelevantAlternativesRC {
 }
 
 /* Run statements to prove that passing functions as arguments is working */
-run { 
-    //should run fine
-    wellformed
-    thereIsAWinner
-    universality[rcAllVotersPreferAtoB, rcGroupPreference]
-}
+// run { 
+//     //should run fine
+//     wellformed
+//     thereIsAWinner
+//     universality[rcAllVotersPreferAtoB, rcGroupPreference]
+// }
 
-run { 
-    //should produce unsat
-    wellformed
-    thereIsAWinner
-    not universality[rcAllVotersPreferAtoB, rcGroupPreference]
-}
-
-
-run {
-    wellformed
-    eliminationProcedure
-    thereIsAWinner
-
-    // TODO: write testExpects
-    noFirstChoiceWinner
-    not noAltFirstChoiceWinner
-
-    not noDictatorsRC
+// run { 
+//     //should produce unsat
+//     wellformed
+//     thereIsAWinner
+//     not universality[rcAllVotersPreferAtoB, rcGroupPreference]
+// }
 
 
-} for exactly 3 Candidate, exactly 7 Voter
+// run {
+//     wellformed
+//     eliminationProcedure
+//     thereIsAWinner
+
+//     // TODO: write testExpects
+//     noFirstChoiceWinner
+//     not noAltFirstChoiceWinner
+
+//     not noDictatorsRC
+
+
+// } for exactly 3 Candidate, exactly 7 Voter
 
 test expect {
     vacuity_rc: {
@@ -446,6 +446,19 @@ test expect {
         thereIsAWinner
         independenceOfIrrelevantAlternativesRC
     } for exactly 3 Candidate, exactly 7 Voter is sat
+
+    //proving that no dictators is satisfiable, but not theorem for ranked choice
+    no_dictators_rc: {
+        wellformed
+        thereIsAWinner
+        noDictatorsRC
+    } for exactly 3 Candidate, exactly 7 Voter is sat
+
+    not_no_dictators_rc: {
+        wellformed
+        thereIsAWinner
+        not noDictatorsRC
+    } for exactly 3 Candidate, exactly 7 Voter is sat
 }
 
 // Run to see examples of a ranked choice vote
@@ -461,12 +474,12 @@ test expect {
 // Run to see examples of ranked choice voting failing at IIA
 // Tested with exactly 4 Candidate, exactly 7 Voter
 // and with exactly 3 Candidate, exactly 7 Voter
-run {
-    wellformed
-    eliminationProcedure
-    thereIsAWinner
+// run {
+//     wellformed
+//     eliminationProcedure
+//     thereIsAWinner
 
-    not noDictatorsRC
+//     not noDictatorsRC
 
-    not independenceOfIrrelevantAlternativesRC
-} for exactly 3 Candidate, exactly 7 Voter
+//     not independenceOfIrrelevantAlternativesRC
+// } for exactly 3 Candidate, exactly 7 Voter
