@@ -43,7 +43,6 @@ We chose to examine and apply Arrow's Impossibility Theorem to a simple pluralit
   - Importantly, we note that there are external mechanisms not native to a **Simple Plurality** voting system that handle the situation in case of a tie. (Usually, another round of voting is held, or some other system is invoked in the case of a tie). Because of this, we assume for the sake of simplicity and consistency that there is a winner after a single round of **Simple Plurality** voting.
 
 #### *Ranked Choice Voting (RCV)*
-(TODO: go through preds and use comments i wrote to inform the things discussed here)
 - Ties in rounds are randomly solved (model abstraction)
   - If two candidates receieve an equally low amount of votes in a round, a non-deterministic candidate among those with the least votes is eliminated. There is no established way that a generic RCV system handles ties among losing candidates, mostly because with a large amount of voters this is extremely rare. Nonetheless, this seemed like the least complex/fair choice to model.
 - We enforce that there is a candidate for each choice (one, not lone). Following the spirit of our "All voters vote" design decision,
